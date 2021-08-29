@@ -78,10 +78,10 @@ std::vector<templated_string> clang::commands_for(rule_type type) {
 			    // rm -rf $out
 			    {"rm  -rf "s, var::OUTPUT},
 			    // ar qc $out $in
-			    {where("ar"sv), " qc "s, var::OUTPUT, " "s, var::LINK_FLAGS,
-			     " "s, var::INPUT},
+			    {where("ar"sv).string(), " qc "s, var::OUTPUT, " "s,
+			     var::LINK_FLAGS, " "s, var::INPUT},
 			    // ranlib $out
-			    {where("ranlib"sv), " "s, var::OUTPUT},
+			    {where("ranlib"sv).string(), " "s, var::OUTPUT},
 			};
 		default:
 			break;

@@ -288,7 +288,7 @@ size_t compiler_info::register_impl(compiler_factory const& impl) {
 
 compiler_info compiler_info::from_environment() {
 	auto var = compiler_executable();
-	compiler_info result{fullpath(var), var, {}};
+	compiler_info result{fullpath(var), var.string(), {}};
 	result.id = compiler_id(result.exec);
 	for (auto const& impl : factories()) {
 		if (impl.id != result.id.first) continue;
