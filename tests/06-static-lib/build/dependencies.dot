@@ -1,0 +1,20 @@
+digraph {
+    node [fontname="Atkinson Hyperlegible"]
+    edge [fontname="Atkinson Hyperlegible"]
+
+    node1 [label="main.cc" shape="house"]
+    node2 [label="main.cc.o"]
+    node3 [label="example" shape="rect"]
+    node4 [label="mod-iface.cc" shape="house"]
+    node5 [label="mod-iface.cc.o"]
+    node6 [label="mod-impl.cc" shape="house"]
+    node7 [label="mod-impl.cc.o"]
+    node8 [label="libgreeter.a" shape="septagon"]
+    node2 -> { node1 }
+    node2 -> { node5 } [style=dashed]
+    node3 -> { node2 node8 }
+    node5 -> { node4 } [label="name"]
+    node7 -> { node6 }
+    node7 -> { node5 } [style=dashed]
+    node8 -> { node5 node7 }
+}

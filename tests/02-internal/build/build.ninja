@@ -1,0 +1,13 @@
+CXXFLAGS = -std=c++20 -O0 -g
+
+rule cc
+    command = /usr/bin/x86_64-linux-gnu-g++-11 $DEFINES $CFLAGS $CXXFLAGS -fmodules-ts -c $in -o $out
+    description = Building CXX object $out
+
+rule link-exe
+    command = /usr/bin/x86_64-linux-gnu-g++-11 $in -o $out
+    description = Linking CXX executable $out
+
+build app.dir/main.cc.o: cc ../main.cc || gcm.cache/name.gcm
+build app.dir/mod.cc.o | gcm.cache/name.gcm: cc ../mod.cc
+build app: link-exe app.dir/main.cc.o app.dir/mod.cc.o

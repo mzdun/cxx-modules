@@ -1,0 +1,9 @@
+{
+    "greeter": {
+        "type": "static",
+        "sources": [
+            "mod-iface.cc",
+            "mod-impl.cc"
+        ]
+    }
+}

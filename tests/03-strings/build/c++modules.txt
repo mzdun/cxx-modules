@@ -1,0 +1,40 @@
+compiler: GCC/11 1 0
+executable: /usr/bin/x86_64-linux-gnu-g++-11
+
+------------------------------------
+
+source dir: /home/marcin/code/lightning/tests/03-strings
+binary dir: /home/marcin/code/lightning/tests/03-strings/build
+requires
+    main.cc
+        name
+provides
+    mod.cc -> name
+
+------------------------------------
+
+EXE app ""
+    provides
+        name
+    includes
+        main.cc
+        mod.cc
+
+------------------------------------
+
+main.cc
+    name
+mod.cc -> name
+
+------------------------------------
+
+<global module>
+    sources
+        main.cc
+    requires
+        name
+    linker
+        app
+name -> mod.cc
+    linker
+        app

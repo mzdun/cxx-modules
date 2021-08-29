@@ -1,0 +1,8 @@
+{
+    "app": {
+        "type": "executable",
+        "sources": [
+            "main.cc"
+        ]
+    }
+}
