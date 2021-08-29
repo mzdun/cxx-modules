@@ -1,0 +1,6 @@
+[submodule "external/json"]
+	path = external/json
+	url = https://github.com/mbits-libs/json.git
+[submodule "external/tiny-process-library"]
+	path = external/tiny-process-library
+	url = https://gitlab.com/eidheim/tiny-process-library.git

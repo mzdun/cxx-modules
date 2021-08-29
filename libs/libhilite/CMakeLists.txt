@@ -1,0 +1,5 @@
+add_library(hilite STATIC src/hilite.cc src/none.cc include/hilite/hilite.hh include/hilite/none.hh)
+target_compile_options(hilite PRIVATE ${ADDITIONAL_WALL_FLAGS})
+target_include_directories(hilite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(hilite PUBLIC cell)
+set_target_properties(hilite PROPERTIES FOLDER libs)
