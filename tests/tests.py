@@ -18,6 +18,7 @@ __dirname__ = os.path.dirname(__file__)
 
 binary = os.path.join(os.getcwd(), 'c++modules')
 
+
 class cd:
     def __init__(self, dirname):
         self.dirname = os.path.expanduser(dirname)
@@ -29,6 +30,7 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.saved)
 
+
 def run(*args, **kwargs):
     # print(*args)
     p = subprocess.Popen(args, **kwargs)
@@ -38,15 +40,18 @@ def run(*args, **kwargs):
         return False
     return True
 
+
 def run_test(dirname, application):
     print('==[   {:=<50}'.format(dirname + '   ]'))
     with cd(os.path.join(__dirname__, dirname)):
         shutil.rmtree('build', ignore_errors=True)
-        if not run(binary): return
+        if not run(binary):
+            return
         with cd('build'):
             run('dot', '-Tpng', '-o', 'dependencies.png', 'dependencies.dot') and \
-            run('ninja') and \
-            run(os.path.join('.', application))
+                run('ninja') and \
+                run(os.path.join('.', application))
+
 
 if len(sys.argv) > 1:
     for dirname in sys.argv[1:]:
@@ -54,8 +59,3 @@ if len(sys.argv) > 1:
 else:
     for dirname in sorted(suite.keys()):
         run_test(dirname, suite[dirname])
-
-
-# dot -Tpng dependencies.dot > dependencies.png
-# ninja
-# ./app
