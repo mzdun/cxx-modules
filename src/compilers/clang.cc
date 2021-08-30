@@ -36,7 +36,8 @@ struct clang : compiler {
 	    : compiler_{exec} {}
 
 	void mapout(build_info const& build, generator& gen) override;
-	std::vector<templated_string> commands_for(rule_type) override;
+	std::vector<templated_string> commands_for(rule_type)
+	override;
 
 private:
 	fs::path compiler_{};
@@ -57,7 +58,7 @@ std::vector<templated_string> clang::commands_for(rule_type type) {
 			    {as_str(compiler_.generic_u8string()), " "s, var::INPUT, " "s,
 			     var::DEFINES, " "s, var::CFLAGS, " "s, var::CXXFLAGS, " -o "s,
 			     var::OUTPUT,
-			     " -fprebuilt-module-path=bmi -c"
+			     " -fprebuilt-implicit-modules -fprebuilt-module-path=bmi -c"
 			     " -Xclang -emit-module-interface"},
 			};
 		case rule_type::COMPILE:
@@ -65,7 +66,8 @@ std::vector<templated_string> clang::commands_for(rule_type type) {
 			    // clang++ $in $DEFINES $FLAGS -o $out -c
 			    {as_str(compiler_.generic_u8string()), " "s, var::INPUT, " "s,
 			     var::DEFINES, " "s, var::CFLAGS, " "s, var::CXXFLAGS, " -o "s,
-			     var::OUTPUT, " -fprebuilt-module-path=bmi -c"},
+			     var::OUTPUT,
+			     " -fprebuilt-implicit-modules -fprebuilt-module-path=bmi -c"},
 			};
 		case rule_type::LINK_EXECUTABLE:
 			return {
@@ -78,10 +80,10 @@ std::vector<templated_string> clang::commands_for(rule_type type) {
 			    // rm -rf $out
 			    {"rm  -rf "s, var::OUTPUT},
 			    // ar qc $out $in
-			    {where("ar"sv).string(), " qc "s, var::OUTPUT, " "s,
+			    {where("ar"sv, false).string(), " qc "s, var::OUTPUT, " "s,
 			     var::LINK_FLAGS, " "s, var::INPUT},
 			    // ranlib $out
-			    {where("ranlib"sv).string(), " "s, var::OUTPUT},
+			    {where("ranlib"sv, false).string(), " "s, var::OUTPUT},
 			};
 		default:
 			break;

@@ -43,7 +43,7 @@ namespace {
 		return result;
 	}
 
-	fs::path fullpath(fs::path const& prog) {
+	fs::path fullpath(fs::path const& prog, bool real_path) {
 		if (prog.native().find(fs::path::preferred_separator) !=
 		        std::string::npos ||
 		    prog.native().find('/') != std::string::npos)
@@ -53,26 +53,27 @@ namespace {
 		for (auto const& dir : path) {
 			auto candidate = dir / prog;
 			std::error_code ec{};
-#if 1
-			auto status = fs::symlink_status(candidate, ec);
-			if (ec || (!fs::is_regular_file(status) && !fs::is_symlink(status)))
-				continue;
-			while (fs::is_symlink(status)) {
-				auto link = fs::read_symlink(candidate);
-				if (!link.is_absolute()) {
-					link = (candidate.parent_path() / link).lexically_normal();
-				}
-				status = fs::symlink_status(link, ec);
+			if (real_path) {
+				auto status = fs::symlink_status(candidate, ec);
 				if (ec ||
 				    (!fs::is_regular_file(status) && !fs::is_symlink(status)))
-					break;
-				candidate = link;
+					continue;
+				while (fs::is_symlink(status)) {
+					auto link = fs::read_symlink(candidate);
+					if (!link.is_absolute()) {
+						link =
+						    (candidate.parent_path() / link).lexically_normal();
+					}
+					status = fs::symlink_status(link, ec);
+					if (ec || (!fs::is_regular_file(status) &&
+					           !fs::is_symlink(status)))
+						break;
+					candidate = link;
+				}
+			} else {
+				auto status = fs::status(candidate, ec);
+				if (ec || !fs::is_regular_file(status)) continue;
 			}
-#else
-			auto status = fs::status(candidate, ec);
-			if (ec || !fs::is_regular_file(status)) continue;
-#endif
-
 			return candidate;
 		}
 
@@ -277,8 +278,8 @@ void compiler::add_rules(unsigned long long const rules_needed,
 	gen.set_rules(std::move(results));
 }
 
-fs::path compiler::where(fs::path const& toolname) {
-	return fullpath(toolname);
+fs::path compiler::where(fs::path const& toolname, bool real_paths) {
+	return fullpath(toolname, real_paths);
 }
 
 size_t compiler_info::register_impl(compiler_factory const& impl) {
@@ -287,8 +288,13 @@ size_t compiler_info::register_impl(compiler_factory const& impl) {
 }
 
 compiler_info compiler_info::from_environment() {
-	auto var = compiler_executable();
-	compiler_info result{fullpath(var), var.string(), {}};
+	auto const var = compiler_executable();
+	auto const is_clang = [&] {
+		auto const fname = var.filename().generic_u8string();
+		return fname == u8"clang++"sv || fname.starts_with(u8"clang++-"sv) ||
+		       fname.starts_with(u8"clang++."sv);
+	}();
+	compiler_info result{fullpath(var, !is_clang), var.string(), {}};
 	result.id = compiler_id(result.exec);
 	for (auto const& impl : factories()) {
 		if (impl.id != result.id.first) continue;

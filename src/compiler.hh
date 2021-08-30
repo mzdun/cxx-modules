@@ -32,7 +32,7 @@ protected:
 		return std::numeric_limits<size_t>::max();
 	};
 
-	static fs::path where(fs::path const& toolname);
+	static fs::path where(fs::path const& toolname, bool real_paths);
 };
 
 struct compiler_factory {
