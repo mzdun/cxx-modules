@@ -35,15 +35,34 @@ protected:
 	static fs::path where(fs::path const& toolname, bool real_paths);
 };
 
-struct compiler_factory {
-	using create_type = std::unique_ptr<compiler> (*)(std::u8string_view path,
-	                                                  std::string_view id,
-	                                                  std::string_view version);
-
+struct compiler_id {
 	std::string_view id;
 	std::string_view if_macro;
 	std::string_view version_macros;
-	create_type create{};
+};
+
+struct compiler_factory {
+	virtual ~compiler_factory();
+	virtual std::unique_ptr<compiler> create(
+	    std::u8string_view path,
+	    std::string_view id,
+	    std::string_view version) const = 0;
+	virtual compiler_id get_compiler_id() const = 0;
+};
+
+template <typename Impl>
+struct simple_compiler_factory : compiler_factory {
+	explicit simple_compiler_factory(compiler_id const& id) : id_{id} {};
+	std::unique_ptr<compiler> create(std::u8string_view path,
+	                                 std::string_view id,
+	                                 std::string_view version) const override {
+		return std::make_unique<Impl>(path, id, version);
+	};
+
+	compiler_id get_compiler_id() const override { return id_; }
+
+private:
+	compiler_id id_{};
 };
 
 struct compiler_info {
@@ -51,7 +70,7 @@ struct compiler_info {
 	std::string name;
 	std::pair<std::string, std::string> id;
 	compiler_factory const* factory{};
-	static size_t register_impl(compiler_factory const&);
+	static size_t register_impl(std::unique_ptr<compiler_factory>&&);
 	static compiler_info from_environment();
 	std::optional<std::string> preproc(fs::path const&) const;
 	std::unique_ptr<compiler> create() const {
@@ -62,16 +81,11 @@ struct compiler_info {
 
 template <typename Impl>
 struct compiler_registrar {
-	static std::unique_ptr<compiler> create(std::u8string_view path,
-	                                        std::string_view id,
-	                                        std::string_view version) noexcept {
-		return std::make_unique<Impl>(path, id, version);
-	};
-
 	compiler_registrar(std::string_view id,
 	                   std::string_view if_macro,
 	                   std::string_view version_macros) {
 		compiler_info::register_impl(
-		    {id, if_macro, version_macros, compiler_registrar<Impl>::create});
+		    std::make_unique<simple_compiler_factory<Impl>>(
+		        compiler_id{id, if_macro, version_macros}));
 	}
 };

@@ -9,8 +9,8 @@
 namespace {
 	using namespace std::literals;
 
-	std::vector<compiler_factory>& factories() {
-		static std::vector<compiler_factory> impl{};
+	std::vector<std::unique_ptr<compiler_factory>>& factories() {
+		static std::vector<std::unique_ptr<compiler_factory>> impl{};
 		return impl;
 	}
 
@@ -92,7 +92,7 @@ namespace {
 
 	void write(TinyProcessLib::Process& proc, char sep) { proc.write(&sep, 1); }
 
-	std::pair<std::string, std::string> compiler_id(fs::path const& cxx) {
+	std::pair<std::string, std::string> compiler_type(fs::path const& cxx) {
 		std::vector<std::string> args{cxx.generic_string(), "-E", "-o-",
 		                              "-xc++", "-"};
 		std::string text;
@@ -109,7 +109,8 @@ namespace {
 		static constexpr auto hash_if = "#if"sv;
 		static constexpr auto hash_ifelse = "#elif"sv;
 		auto control = hash_if;
-		for (auto const& supplier : factories()) {
+		for (auto const& factory : factories()) {
+			auto const supplier = factory->get_compiler_id();
 			write(preproc, control);
 			write(preproc, ' ');
 			write(preproc, supplier.if_macro);
@@ -162,6 +163,7 @@ namespace {
 }  // namespace
 
 compiler::~compiler() = default;
+compiler_factory::~compiler_factory() = default;
 
 void compiler::mapout(build_info const&, struct generator&) {
 	// noop
@@ -282,23 +284,23 @@ fs::path compiler::where(fs::path const& toolname, bool real_paths) {
 	return fullpath(toolname, real_paths);
 }
 
-size_t compiler_info::register_impl(compiler_factory const& impl) {
-	factories().push_back(impl);
+size_t compiler_info::register_impl(std::unique_ptr<compiler_factory>&& impl) {
+	factories().push_back(std::move(impl));
 	return factories().size();
 }
 
 compiler_info compiler_info::from_environment() {
 	auto const var = compiler_executable();
-	auto const is_clang = [&] {
-		auto const fname = var.filename().generic_u8string();
-		return fname == u8"clang++"sv || fname.starts_with(u8"clang++-"sv) ||
-		       fname.starts_with(u8"clang++."sv);
-	}();
-	compiler_info result{fullpath(var, !is_clang), var.string(), {}};
-	result.id = compiler_id(result.exec);
+	/*auto const is_clang = [&] {
+	    auto const fname = var.filename().generic_u8string();
+	    return fname == u8"clang++"sv || fname.starts_with(u8"clang++-"sv) ||
+	           fname.starts_with(u8"clang++."sv);
+	}();*/
+	compiler_info result{fullpath(var, false /*!is_clang*/), var.string(), {}};
+	result.id = compiler_type(result.exec);
 	for (auto const& impl : factories()) {
-		if (impl.id != result.id.first) continue;
-		result.factory = &impl;
+		if (impl->get_compiler_id().id != result.id.first) continue;
+		result.factory = impl.get();
 		break;
 	}
 	return result;
