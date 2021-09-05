@@ -1,8 +1,7 @@
 #include "ninja.hh"
 #include <fstream>
 #include <set>
-
-#include "../utils.hh"
+#include "utils.hh"
 
 using namespace std::literals;
 

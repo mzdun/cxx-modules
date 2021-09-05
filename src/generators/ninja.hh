@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../generator.hh"
+#include "generator.hh"
 
 class ninja : public generator {
 public:

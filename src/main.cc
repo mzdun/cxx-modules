@@ -6,6 +6,7 @@
 #include "scanner.hh"
 #include "types.hh"
 #include "utils.hh"
+#include "xml/compiler.hh"
 
 using namespace std::literals;
 
@@ -19,6 +20,8 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 	}
+
+	load_xml_compilers();
 
 	auto source_dir = fs::current_path();
 	auto build_dir = source_dir / u8"build"sv;
@@ -35,12 +38,13 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	logger::print(build, comp);
+	logger log{build, comp};
+	log.print();
 
 	using PlatformGenerator = ninja;  // FUTURE: ninja || vstudio
 
 	PlatformGenerator gen{};
-	if (auto cxx = comp.create(); cxx) cxx->mapout(build, gen);
+	if (auto cxx = comp.create(log); cxx) cxx->mapout(build, gen);
 
 	auto back_to_sources = build.source_from_build();
 	gen.generate(back_to_sources, build.build_dir);

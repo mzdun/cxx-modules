@@ -19,6 +19,10 @@ inline std::string as_str(std::string_view view) {
 	return {view.data(), view.size()};
 }
 
+inline std::u8string as_u8str(std::u8string_view view) {
+	return {view.data(), view.size()};
+}
+
 inline std::vector<std::string> split_s(char sep, std::string_view data) {
 	std::vector<std::string> result{};
 
@@ -75,4 +79,13 @@ inline std::string lstrip_s(std::string_view data) {
 inline std::string rstrip_s(std::string_view data) {
 	auto const result = rstrip_sv(data);
 	return {result.data(), result.size()};
+}
+
+template <typename... String>
+inline std::u8string u8concat(String const&... parts) {
+	auto const length = (parts.length() + ...);
+	std::u8string result{};
+	result.reserve(length);
+	(result.append(parts), ...);
+	return result;
 }

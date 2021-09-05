@@ -1,8 +1,10 @@
 #include <charconv>
-#include "../compiler.hh"
-#include "../generator.hh"
-#include "../types.hh"
-#include "../utils.hh"
+#include <sstream>
+#include "compiler.hh"
+#include "generator.hh"
+#include "process.hpp"
+#include "types.hh"
+#include "utils.hh"
 
 using namespace std::literals;
 

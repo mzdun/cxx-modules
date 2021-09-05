@@ -45,6 +45,20 @@ enum class rule_type {
 	    ARCHIVE = LINK_STATIC
 };
 
+struct rule_types {
+	unsigned long long bits{};
+
+	void set(rule_type rule) noexcept { bits |= bit(rule); }
+	bool has(rule_type rule) const noexcept {
+		auto const test = bit(rule);
+		return (bits & test) == test;
+	}
+
+	static unsigned long long bit(rule_type rule) {
+		return 1ull << static_cast<std::underlying_type_t<rule_type>>(rule);
+	}
+};
+
 using rule_name = std::variant<std::monostate, std::string, rule_type>;
 
 struct rule {

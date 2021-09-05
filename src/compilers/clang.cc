@@ -1,7 +1,8 @@
-#include "../compiler.hh"
-#include "../generator.hh"
-#include "../types.hh"
-#include "../utils.hh"
+#include "compiler.hh"
+#include "generator.hh"
+#include "process.hpp"
+#include "types.hh"
+#include "utils.hh"
 
 using namespace std::literals;
 

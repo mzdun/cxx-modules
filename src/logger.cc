@@ -21,6 +21,7 @@ void logger::print() {
 	source_refs();
 	output << separator;
 	modules();
+	output.flush();
 }
 
 void logger::compiler() {

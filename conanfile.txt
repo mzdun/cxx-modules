@@ -1,0 +1,6 @@
+[requires]
+expat/2.4.1
+
+[generators]
+cmake
+cmake_find_package_multi

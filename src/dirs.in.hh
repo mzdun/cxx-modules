@@ -16,8 +16,9 @@ struct version_t {
 constexpr version_t version{};
 
 constexpr auto install_dir = "@CMAKE_INSTALL_PREFIX@"sv;
-constexpr auto share_dir = "@CMAKE_INSTALL_PREFIX@/@SHAREDIR@"sv;
+constexpr auto share_dir = "@SHAREDIR@"sv;
 
 #ifndef NDEBUG
-constexpr auto project_dir = "@CMAKE_CURRENT_SOURCE_DIR@"sv;
+constexpr auto project_dir = "@CMAKE_SOURCE_DIR@"sv;
+constexpr auto build_dir = "@CMAKE_BINARY_DIR@"sv;
 #endif

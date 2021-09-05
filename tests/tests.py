@@ -17,8 +17,7 @@ suite = {
 
 __dirname__ = os.path.dirname(__file__)
 
-binary = os.path.join(os.getcwd(), 'c++modules')
-
+binary = os.path.join(os.getcwd(), 'bin', 'c++modules')
 
 class cd:
     def __init__(self, dirname):

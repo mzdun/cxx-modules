@@ -10,13 +10,9 @@ struct logger {
 	fs::path logname{fs::path{build.build_dir} / "c++modules.txt"};
 	std::ofstream output{logname};
 
-	static void print(build_info const& build, compiler_info const& cxx) {
-		logger{build, cxx}.print();
-	}
-
-private:
 	void print();
 
+private:
 	void compiler();
 	void config();
 	void projects();

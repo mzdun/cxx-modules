@@ -14,25 +14,19 @@ struct compiler {
 	virtual std::vector<templated_string> commands_for(rule_type);
 
 protected:
-	inline auto bit(rule_type rule) {
-		return 1ull << static_cast<std::underlying_type_t<rule_type>>(rule);
-	}
-
 	std::map<std::u8string, size_t> register_projects(struct build_info const&,
 	                                                  generator&);
 	target create_project_target(struct build_info const&,
 	                             struct project const&,
 	                             struct project_info const&,
 	                             std::map<std::u8string, size_t> const&);
-	void add_rules(unsigned long long bits, generator&);
+	void add_rules(rule_types bits, generator&);
 	size_t get_setup_id(std::u8string const& name,
 	                    std::map<std::u8string, size_t> const& ids) {
 		auto it = ids.find(name);
 		if (it != ids.end()) return it->second;
 		return std::numeric_limits<size_t>::max();
 	};
-
-	static fs::path where(fs::path const& toolname, bool real_paths);
 };
 
 struct compiler_id {
@@ -44,6 +38,7 @@ struct compiler_id {
 struct compiler_factory {
 	virtual ~compiler_factory();
 	virtual std::unique_ptr<compiler> create(
+	    struct logger&,
 	    std::u8string_view path,
 	    std::string_view id,
 	    std::string_view version) const = 0;
@@ -53,7 +48,8 @@ struct compiler_factory {
 template <typename Impl>
 struct simple_compiler_factory : compiler_factory {
 	explicit simple_compiler_factory(compiler_id const& id) : id_{id} {};
-	std::unique_ptr<compiler> create(std::u8string_view path,
+	std::unique_ptr<compiler> create(struct logger&,
+	                                 std::u8string_view path,
 	                                 std::string_view id,
 	                                 std::string_view version) const override {
 		return std::make_unique<Impl>(path, id, version);
@@ -73,9 +69,10 @@ struct compiler_info {
 	static size_t register_impl(std::unique_ptr<compiler_factory>&&);
 	static compiler_info from_environment();
 	std::optional<std::string> preproc(fs::path const&) const;
-	std::unique_ptr<compiler> create() const {
+	std::unique_ptr<compiler> create(struct logger& log) const {
 		if (!factory) return {};
-		return factory->create(exec.generic_u8string(), id.first, id.second);
+		return factory->create(log, exec.generic_u8string(), id.first,
+		                       id.second);
 	}
 };
 

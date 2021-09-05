@@ -1,4 +1,4 @@
-#include "../compiler.hh"
+#include "compiler.hh"
 
 using namespace std::literals;
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iterator>
 #include <process.hpp>
+#include "env/path.hh"
 #include "types.hh"
 #include "utils.hh"
 
@@ -12,72 +13,6 @@ namespace {
 	std::vector<std::unique_ptr<compiler_factory>>& factories() {
 		static std::vector<std::unique_ptr<compiler_factory>> impl{};
 		return impl;
-	}
-
-	constexpr auto PATHSEP = ':';
-
-	std::vector<fs::path> getPATH() {
-		auto PATH = std::getenv("PATH");
-		if (!PATH || !*PATH) return {};
-
-		std::vector<fs::path> result{};
-
-		std::string_view paths{PATH};
-		size_t chunks = 1;
-		for (auto c : paths) {
-			if (c == PATHSEP) ++chunks;
-		}
-		result.reserve(chunks);
-
-		size_t prev = 0;
-		size_t current = 0;
-
-		for (auto c : paths) {
-			++current;
-			if (c != PATHSEP) continue;
-			auto curr = paths.substr(prev, current - 1 - prev);
-			prev = current;
-			if (!curr.empty()) result.emplace_back(curr);
-		}
-
-		return result;
-	}
-
-	fs::path fullpath(fs::path const& prog, bool real_path) {
-		if (prog.native().find(fs::path::preferred_separator) !=
-		        std::string::npos ||
-		    prog.native().find('/') != std::string::npos)
-			return prog;
-
-		auto path = getPATH();
-		for (auto const& dir : path) {
-			auto candidate = dir / prog;
-			std::error_code ec{};
-			if (real_path) {
-				auto status = fs::symlink_status(candidate, ec);
-				if (ec ||
-				    (!fs::is_regular_file(status) && !fs::is_symlink(status)))
-					continue;
-				while (fs::is_symlink(status)) {
-					auto link = fs::read_symlink(candidate);
-					if (!link.is_absolute()) {
-						link =
-						    (candidate.parent_path() / link).lexically_normal();
-					}
-					status = fs::symlink_status(link, ec);
-					if (ec || (!fs::is_regular_file(status) &&
-					           !fs::is_symlink(status)))
-						break;
-					candidate = link;
-				}
-			} else {
-				auto status = fs::status(candidate, ec);
-				if (ec || !fs::is_regular_file(status)) continue;
-			}
-			return candidate;
-		}
-
-		return prog;
 	}
 
 	fs::path compiler_executable() {
@@ -254,8 +189,7 @@ target compiler::create_project_target(
 	return library;
 }
 
-void compiler::add_rules(unsigned long long const rules_needed,
-                         generator& gen) {
+void compiler::add_rules(rule_types const rules_needed, generator& gen) {
 	static constexpr rule_type rules[] = {
 #define ENUM(NAME) rule_type::NAME,
 	    RULE(ENUM)
@@ -264,8 +198,7 @@ void compiler::add_rules(unsigned long long const rules_needed,
 
 	size_t length{};
 	for (auto rule : rules) {
-		auto const test = bit(rule);
-		if ((rules_needed & test) == 0) continue;
+		if (!rules_needed.has(rule)) continue;
 		++length;
 	}
 
@@ -273,15 +206,10 @@ void compiler::add_rules(unsigned long long const rules_needed,
 	results.reserve(length);
 
 	for (auto rule : rules) {
-		auto const test = bit(rule);
-		if ((rules_needed & test) == 0) continue;
+		if (!rules_needed.has(rule)) continue;
 		results.push_back({rule, commands_for(rule)});
 	}
 	gen.set_rules(std::move(results));
-}
-
-fs::path compiler::where(fs::path const& toolname, bool real_paths) {
-	return fullpath(toolname, real_paths);
 }
 
 size_t compiler_info::register_impl(std::unique_ptr<compiler_factory>&& impl) {
@@ -291,12 +219,7 @@ size_t compiler_info::register_impl(std::unique_ptr<compiler_factory>&& impl) {
 
 compiler_info compiler_info::from_environment() {
 	auto const var = compiler_executable();
-	/*auto const is_clang = [&] {
-	    auto const fname = var.filename().generic_u8string();
-	    return fname == u8"clang++"sv || fname.starts_with(u8"clang++-"sv) ||
-	           fname.starts_with(u8"clang++."sv);
-	}();*/
-	compiler_info result{fullpath(var, false /*!is_clang*/), var.string(), {}};
+	compiler_info result{env::which(var), var.string(), {}};
 	result.id = compiler_type(result.exec);
 	for (auto const& impl : factories()) {
 		if (impl->get_compiler_id().id != result.id.first) continue;
@@ -319,7 +242,9 @@ std::optional<std::string> compiler_info::preproc(
 		text = std::nullopt;
 		std::copy(args.begin(), args.end(),
 		          std::ostream_iterator<std::string>{std::cerr, " "});
-		std::cerr << '\n';
+		std::cerr << '\n'
+		          << "c++modules: error: command returned "
+		          << preproc.get_exit_status() << '\n';
 	}
 	if (!error_out.empty()) {
 		std::cerr << error_out;

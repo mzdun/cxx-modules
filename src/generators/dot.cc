@@ -2,8 +2,7 @@
 #include <fstream>
 #include <map>
 #include <set>
-
-#include "../utils.hh"
+#include "utils.hh"
 
 using namespace std::literals;
 
