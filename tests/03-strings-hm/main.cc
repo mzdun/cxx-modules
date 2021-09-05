@@ -1,10 +1,9 @@
-#include <iostream>
-#include <string>
-
+import<iostream>;
+import<string>;
 import name;
 
 void greet(std::string const& name) {
-	std::cout << "Hello, " << name << "!\n";
+	std::cerr << "Hello, " << name << "!\n";
 }
 
 int main() {

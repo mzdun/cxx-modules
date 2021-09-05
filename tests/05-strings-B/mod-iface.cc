@@ -1,5 +1,5 @@
 module;
-#include <string>
+import<string>;
 
 export module name;
 

@@ -8,7 +8,8 @@ import shutil
 suite = {
     "01-cxx17": "app",
     "02-internal": "app",
-    "03-strings": "app",
+    "03-strings-hm": "app",
+    "03-strings-inc": "app",
     "04-impl": "app",
     "05-strings-B": "app",
     "06-static-lib": "app/example",
