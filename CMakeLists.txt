@@ -1,5 +1,8 @@
 cmake_minimum_required (VERSION 3.10)
-project (c++modules)
+project (c++modules LANGUAGES CXX VERSION 0.1.0)
+
+set(PROJECT_VERSION_STABILITY "-alpha")
+set(SHAREDIR "share/c++modules-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -72,9 +75,7 @@ add_subdirectory(external)
 add_subdirectory(libs)
 add_subdirectory(extras)
 
-# add_executable(hilite-test test.cc)
-# target_compile_options(hilite-test PRIVATE ${ADDITIONAL_WALL_FLAGS})
-# target_link_libraries(hilite-test PUBLIC cell hilite hilite-cxx fs)
+configure_file(src/dirs.in.hh src/dirs.hh @ONLY)
 
 add_executable(c++modules
   src/compilers/cl.cc
@@ -100,3 +101,4 @@ add_executable(c++modules
   src/main.cc)
 target_compile_options(c++modules PRIVATE ${ADDITIONAL_WALL_FLAGS})
 target_link_libraries(c++modules PUBLIC cell hilite hilite-cxx fs json tiny-process-library)
+target_include_directories(c++modules PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/src)
