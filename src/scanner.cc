@@ -56,6 +56,7 @@ namespace {
 		bool module_export{false};
 		bool module_decl{false};
 		bool module_import{false};
+		bool legacy_header{false};
 		size_t name_start{}, name_end{};
 
 		bool is_decl(hl::token_t const& tok) {
@@ -73,6 +74,12 @@ namespace {
 					name_start = tok.start;
 					name_end = tok.end;
 					return true;
+				case hl::cxx::system_header_name:
+				case hl::cxx::local_header_name:
+					legacy_header = true;
+					name_start = tok.start;
+					name_end = tok.end;
+					return false;
 				default:
 					break;
 			}
@@ -179,6 +186,8 @@ namespace {
 			for (auto const& tok : tokens) {
 				switch (static_cast<hl::cxx::token>(tok.kind)) {
 					case hl::cxx::identifier:
+					case hl::cxx::system_header_name:
+					case hl::cxx::local_header_name:
 						dest->append(as_u8sv(remove_deleted_eols(
 						    line.substr(tok.start, tok.end - tok.start))));
 						break;
@@ -211,6 +220,12 @@ namespace {
 			}
 
 			if (info.module_import) {
+				if (info.legacy_header) {
+					if (!module_name.empty() && part_name.empty()) {
+						result.imports.push_back({std::move(module_name), {}});
+					}
+					return;
+				}
 				result.imports.push_back(
 				    {std::move(module_name), std::move(part_name)});
 				return;

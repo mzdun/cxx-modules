@@ -255,9 +255,9 @@ target compiler::create_project_target(
 void compiler::add_rules(unsigned long long const rules_needed,
                          generator& gen) {
 	static constexpr rule_type rules[] = {
-	    rule_type::MKDIR,           rule_type::COMPILE, rule_type::EMIT_BMI,
-	    rule_type::ARCHIVE,         rule_type::LINK_SO, rule_type::LINK_MOD,
-	    rule_type::LINK_EXECUTABLE,
+#define ENUM(NAME) rule_type::NAME,
+	    RULE(ENUM)
+#undef ENUM
 	};
 
 	size_t length{};

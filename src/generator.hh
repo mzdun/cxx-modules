@@ -6,28 +6,43 @@
 #include <vector>
 #include "types.hh"
 
+#define VAR(X)      \
+	X(INPUT)        \
+	X(OUTPUT)       \
+	X(MAIN_OUTPUT)  \
+	X(LINK_FLAGS)   \
+	X(LINK_PATH)    \
+	X(LINK_LIBRARY) \
+	X(DEFINES)      \
+	X(CFLAGS)       \
+	X(CXXFLAGS)
+
 enum class var {
-	INPUT,
-	OUTPUT,
-	MAIN_OUTPUT,
-	LINK_FLAGS,
-	LINK_PATH,
-	LINK_LIBRARY,
-	DEFINES,
-	CFLAGS,
-	CXXFLAGS
+#define ENUM(NAME) NAME,
+	VAR(ENUM)
+#undef ENUM
 };
 
-using templated_string = std::vector<std::variant<std::string, var>>;
+struct named_var {
+	std::string value;
+};
+using templated_string = std::vector<std::variant<std::string, named_var, var>>;
+
+#define RULE(X)     \
+	X(MKDIR)        \
+	X(COMPILE)      \
+	X(EMIT_BMI)     \
+	X(EMIT_INCLUDE) \
+	X(LINK_STATIC)  \
+	X(LINK_SO)      \
+	X(LINK_MOD)     \
+	X(LINK_EXECUTABLE)
 
 enum class rule_type {
-	MKDIR,
-	COMPILE,
-	EMIT_BMI,
-	ARCHIVE,
-	LINK_SO,
-	LINK_MOD,
-	LINK_EXECUTABLE
+#define ENUM(NAME) NAME,
+	RULE(ENUM)
+#undef ENUM
+	    ARCHIVE = LINK_STATIC
 };
 
 using rule_name = std::variant<std::monostate, std::string, rule_type>;
@@ -41,10 +56,11 @@ struct rule {
 };
 
 struct file_ref {
-	enum kind { input, output, linked };
+	enum kind { input, output, linked, header_module, include };
 	size_t prj;
 	std::u8string path;
 	kind type{output};
+	std::u8string node_name{};
 	auto operator<=>(file_ref const&) const = default;
 };
 

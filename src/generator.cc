@@ -12,6 +12,8 @@ templated_string rule::default_message(rule_type type) {
 			return {"Building CXX object "s, var::OUTPUT};
 		case rule_type::EMIT_BMI:
 			return {"Building CXX module interface "s, var::OUTPUT};
+		case rule_type::EMIT_INCLUDE:
+			return {"Building CXX header-module interface "s, var::OUTPUT};
 		case rule_type::ARCHIVE:
 			return {"Linking CXX static library "s, var::OUTPUT};
 		case rule_type::LINK_SO:

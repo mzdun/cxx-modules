@@ -613,8 +613,9 @@ namespace hl::cxx::parser {
 			lit("import")
 			>> SP
 			>> (header_name
-				| (pp_module_ref >> SP >> *((preprocessing_token - ch(';')) >> SP) >> ch(';'))
+				| pp_module_ref
 				)
+			>> SP >> *((preprocessing_token - ch(';')) >> SP) >> ch(';')
 		)                                                                   [on_import]
 		;
 

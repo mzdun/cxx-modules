@@ -48,6 +48,8 @@ namespace {
 						    return "cc"sv;
 					    case rule_type::EMIT_BMI:
 						    return "bmi"sv;
+					    case rule_type::EMIT_INCLUDE:
+						    return "header-module"sv;
 					    case rule_type::ARCHIVE:
 						    return "ar"sv;
 					    case rule_type::LINK_SO:
@@ -73,6 +75,7 @@ namespace {
 						    return true;
 					    case rule_type::COMPILE:
 					    case rule_type::EMIT_BMI:
+					    case rule_type::EMIT_INCLUDE:
 					    case rule_type::ARCHIVE:
 					    case rule_type::LINK_SO:
 					    case rule_type::LINK_MOD:
@@ -93,12 +96,15 @@ void ninja::generate(std::filesystem::path const& back_to_sources,
 	auto visitor = [&](auto const& arg) {
 		if constexpr (std::is_same_v<decltype(arg), std::string const&>) {
 			build_ninja << arg;
-		} else {
+		} else if constexpr (std::is_same_v<decltype(arg), var const&>) {
 			build_ninja << varname(arg);
+		} else {
+			build_ninja << '$' << arg.value;
 		}
 	};
 
-	build_ninja << "CXXFLAGS = -std=c++20 -O0 -g\n"
+	build_ninja << "CFLAGS = -O0 -g\n"
+	               "CXXFLAGS = -std=c++20\n"
 	               "\n";
 
 	for (auto const& rule : rules_) {
@@ -206,6 +212,9 @@ std::u8string filename_from(std::filesystem::path const& back_to_sources,
 			    .generic_u8string();
 		case file_ref::linked:
 			return (path{setup.subdir} / file.path).generic_u8string();
+		case file_ref::include:
+		case file_ref::header_module:
+			break;
 	}
 	return file.path;
 }

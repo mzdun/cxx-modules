@@ -19,6 +19,7 @@ namespace {
 					    case rule_type::COMPILE:
 						    return {};
 					    case rule_type::EMIT_BMI:
+					    case rule_type::EMIT_INCLUDE:
 						    return "hexagon"sv;
 					    case rule_type::ARCHIVE:
 						    return "septagon"sv;
@@ -48,6 +49,7 @@ namespace {
 						    return true;
 					    case rule_type::COMPILE:
 					    case rule_type::EMIT_BMI:
+					    case rule_type::EMIT_INCLUDE:
 					    case rule_type::ARCHIVE:
 					    case rule_type::LINK_SO:
 					    case rule_type::LINK_MOD:
@@ -62,7 +64,13 @@ namespace {
 
 	std::u8string printable(artifact const& file) {
 		return std::visit(
-		    [](auto const& filename) -> std::u8string { return filename.path; },
+		    [](auto const& filename) -> std::u8string {
+			    if constexpr (std::same_as<decltype(filename),
+			                               file_ref const&>) {
+				    if (!filename.node_name.empty()) return filename.node_name;
+			    }
+			    return filename.path;
+		    },
 		    file);
 	}
 }  // namespace
