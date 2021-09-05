@@ -70,6 +70,7 @@
         "typeindex": "cpp",
         "bitset": "cpp",
         "set": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "complex": "cpp"
     }
 }
