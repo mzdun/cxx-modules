@@ -1,9 +1,9 @@
-#include "xml/compiler.hh"
 #include <iostream>
 #include <map>
+#include <xml/factory.hh>
+#include <xml/parser.hh>
 #include "dirs.hh"
-#include "xml/factory.hh"
-#include "xml/parser.hh"
+#include "xml/compiler.hh"
 
 namespace {
 	void register_xml_compiler(std::filesystem::path&& filename,

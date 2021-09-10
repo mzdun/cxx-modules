@@ -1,8 +1,8 @@
 #pragma once
 
+#include <base/generator.hh>
 #include <fs/file.hh>
 #include <string>
-#include "generator.hh"
 
 namespace env {
 	struct tool {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "env/path.hh"
+#include <env/path.hh>
 
 namespace env {
 	// TODO: cmake projects have private/interface include dirs...

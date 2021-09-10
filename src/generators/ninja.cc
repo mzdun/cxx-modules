@@ -1,7 +1,7 @@
-#include "ninja.hh"
+#include "generators/ninja.hh"
+#include <base/utils.hh>
 #include <fstream>
 #include <set>
-#include "utils.hh"
 
 using namespace std::literals;
 

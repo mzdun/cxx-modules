@@ -1,12 +1,12 @@
 #pragma once
 
+#include <base/generator.hh>
 #include <fs/file.hh>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
-#include "generator.hh"
 
 struct compiler {
 	virtual ~compiler();

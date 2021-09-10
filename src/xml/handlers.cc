@@ -1,4 +1,4 @@
-#include "xml/handlers-internal.hh"
+#include <xml/handlers-internal.hh>
 
 namespace xml {
 	void var_handler::onElement(xml_config&, char const** attrs) {

@@ -1,8 +1,8 @@
 #pragma once
 
+#include <base/generator.hh>
+#include <base/utils.hh>
 #include "env/path.hh"
-#include "generator.hh"
-#include "utils.hh"
 
 namespace xml {
 	struct ident {

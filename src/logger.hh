@@ -1,7 +1,7 @@
 #pragma once
 
+#include <base/compiler.hh>
 #include <fstream>
-#include "compiler.hh"
 #include "types.hh"
 
 struct logger {

@@ -1,5 +1,7 @@
 [requires]
 expat/2.4.1
+fmt/8.0.0
+mbits-args/0.12.3
 
 [generators]
 cmake

@@ -1,10 +1,10 @@
 #include "types.hh"
+#include <base/compiler.hh>
+#include <base/utils.hh>
+#include <cxx/scanner.hh>
 #include <fs/file.hh>
 #include <iostream>
 #include <json/json.hpp>
-#include "compiler.hh"
-#include "scanner.hh"
-#include "utils.hh"
 
 namespace {
 	void load_directory(std::map<project, project::setup>& result,
@@ -151,7 +151,7 @@ build_info build_info::analyze(
 			auto const text = cxx.preproc(srcfile);
 			if (!text) continue;
 
-			auto unit = scan(*text);
+			auto unit = cxx::scan(*text);
 
 			auto u8path =
 			    (setup.subdir / source).lexically_normal().generic_u8string();

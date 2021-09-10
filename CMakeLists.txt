@@ -87,14 +87,16 @@ add_subdirectory(extras)
 configure_file(src/dirs.in.hh src/dirs.hh @ONLY)
 
 add_executable(c++modules
+    src/base/compiler.cc
+    src/base/compiler.hh
+    src/base/generator.cc
+    src/base/generator.hh
+    src/base/utils.hh
+    src/base/xml.hh
     src/compilers/cl.cc
     src/compilers/cl.hh
-    src/compilers/clang.cc
-    src/compilers/clang.hh
-    src/compilers/gcc.cc
-    src/compilers/gcc.hh
-    src/compiler.cc
-    src/compiler.hh
+    src/cxx/scanner.cc
+    src/cxx/scanner.hh
     src/env/binary_interface.cc
     src/env/binary_interface.hh
     src/env/command_list.cc
@@ -107,15 +109,11 @@ add_executable(c++modules
     src/generators/dot.hh
     src/generators/ninja.cc
     src/generators/ninja.hh
-    src/generator.cc
-    src/generator.hh
     src/logger.cc
     src/logger.hh
-    src/scanner.cc
-    src/scanner.hh
+    src/main.cc
     src/types.cc
     src/types.hh
-    src/xml.hh
     src/xml/compiler.cc
     src/xml/compiler.hh
     src/xml/expat.hh
@@ -128,7 +126,6 @@ add_executable(c++modules
     src/xml/parser.hh
     src/xml/types.hh
     src/xml/xml.cc
-    src/main.cc
 )
 target_compile_options(c++modules PRIVATE ${ADDITIONAL_WALL_FLAGS})
 target_link_libraries(c++modules PUBLIC cell hilite hilite-cxx fs json tiny-process-library expat mbits::args)

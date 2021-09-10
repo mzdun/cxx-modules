@@ -1,6 +1,6 @@
 #include "logger.hh"
+#include <base/utils.hh>
 #include <iostream>
-#include "utils.hh"
 
 void logger::print() {
 	if (!output) {

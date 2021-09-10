@@ -1,8 +1,8 @@
-#include "dot.hh"
+#include "generators/dot.hh"
+#include <base/utils.hh>
 #include <fstream>
 #include <map>
 #include <set>
-#include "utils.hh"
 
 using namespace std::literals;
 

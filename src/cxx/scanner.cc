@@ -1,6 +1,6 @@
-#include "scanner.hh"
+#include "cxx/scanner.hh"
+#include <base/utils.hh>
 #include <hilite/cxx.hh>
-#include "utils.hh"
 
 using namespace std::literals;
 
@@ -250,7 +250,7 @@ namespace {
 
 }  // namespace
 
-module_unit scan(std::string_view text) {
+module_unit cxx::scan(std::string_view text) {
 	module_unit unit{};
 	callback cb{text, unit};
 	hl::cxx::tokenize(cb.text, cb);

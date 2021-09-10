@@ -1,6 +1,6 @@
 #pragma once
 
-#include "generator.hh"
+#include <base/generator.hh>
 
 class dot : public generator {
 public:

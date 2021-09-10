@@ -1,12 +1,17 @@
+#include <base/compiler.hh>
+#include <base/utils.hh>
+#include <base/xml.hh>
+#include <generators/dot.hh>
+#include <generators/ninja.hh>
 #include <iostream>
-#include "compiler.hh"
-#include "generators/dot.hh"
-#include "generators/ninja.hh"
 #include "logger.hh"
-#include "scanner.hh"
 #include "types.hh"
-#include "utils.hh"
-#include "xml.hh"
+
+#ifdef __has_include
+#if __has_include(<generators/vs.hh>)
+#include <generators/vs.hh>
+#endif
+#endif
 
 using namespace std::literals;
 
