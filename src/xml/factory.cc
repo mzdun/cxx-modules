@@ -1,10 +1,8 @@
 #include "xml/factory.hh"
 #include <charconv>
-#include "env/binary_interface.hh"
-#include "env/command_list.hh"
-#include "env/include_locator.hh"
 #include "env/path.hh"
 #include "logger.hh"
+#include "xml/compiler.hh"
 
 namespace xml {
 	namespace {
@@ -24,10 +22,11 @@ namespace xml {
 	                 compiler_factory_config&& cfg)
 	    : filename{std::move(filename)}, cfg{std::move(cfg)} {}
 
-	std::unique_ptr<compiler> factory::create(logger& log,
-	                                          std::u8string_view path,
-	                                          std::string_view id,
-	                                          std::string_view version) const {
+	std::unique_ptr<::compiler> factory::create(
+	    logger& log,
+	    std::u8string_view path,
+	    std::string_view,
+	    std::string_view version) const {
 		auto const paths =
 		    env::paths::parser{path, cfg.ident.exe, get_version_major(version)}
 		        .find();
@@ -40,11 +39,9 @@ namespace xml {
 		    cfg.include_dirs.filter,
 		};
 
-		env::binary_interface biin{cfg.bmi_decl.supports_parition,
-		                           cfg.bmi_decl.type == bmi_decl::direct,
-		                           cfg.bmi_decl.dirname, cfg.bmi_decl.ext};
-
-		env::command_list cmd_list{paths, cfg.rules};
+		env::binary_interface bin{cfg.bmi_decl.supports_parition,
+		                          cfg.bmi_decl.type == bmi_decl::direct,
+		                          cfg.bmi_decl.dirname, cfg.bmi_decl.ext};
 
 		log.output << "\n------------------------------------\n\n"sv;
 
@@ -53,9 +50,11 @@ namespace xml {
 		           << " :: " << as_sv(paths.triple)
 		           << " :: " << as_sv(cfg.ident.exe)
 		           << " :: " << as_sv(paths.suffix) << '\n'
-		           << biin << std::flush;
+		           << bin << std::flush;
 
-		return {};
+		return std::make_unique<xml::compiler>(
+		    std::move(locator), std::move(bin),
+		    env::command_list{paths, cfg.rules});
 	}
 
 	compiler_id factory::get_compiler_id() const {

@@ -28,6 +28,9 @@ namespace env {
 			           << '\n';
 		}
 
+		bool standalone_interface() const noexcept {
+			return standalone_interface_;
+		}
 		std::u8string as_interface(mod_name const& name);
 		std::optional<artifact> from_module(
 		    include_locator& locator,

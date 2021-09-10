@@ -14,6 +14,8 @@ conan_basic_setup()
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 find_package(expat REQUIRED)
+find_package(fmt REQUIRED)
+find_package(args REQUIRED)
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${EXTRA_CFLAGS} /MTd")
@@ -114,20 +116,22 @@ add_executable(c++modules
     src/types.cc
     src/types.hh
     src/xml.hh
-    src/xml/xml.cc
-    src/xml/parser.cc
-    src/xml/parser.hh
+    src/xml/compiler.cc
+    src/xml/compiler.hh
     src/xml/expat.hh
     src/xml/factory.cc
     src/xml/factory.hh
     src/xml/handlers-internal.hh
     src/xml/handlers.cc
     src/xml/handlers.hh
+    src/xml/parser.cc
+    src/xml/parser.hh
     src/xml/types.hh
+    src/xml/xml.cc
     src/main.cc
 )
 target_compile_options(c++modules PRIVATE ${ADDITIONAL_WALL_FLAGS})
-target_link_libraries(c++modules PUBLIC cell hilite hilite-cxx fs json tiny-process-library expat)
+target_link_libraries(c++modules PUBLIC cell hilite hilite-cxx fs json tiny-process-library expat mbits::args)
 target_include_directories(c++modules PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 add_custom_target(copy-data ALL

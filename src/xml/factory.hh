@@ -7,7 +7,7 @@ namespace xml {
 	struct factory : compiler_factory {
 		factory(std::filesystem::path&& filename,
 		        compiler_factory_config&& cfg);
-		std::unique_ptr<compiler> create(
+		std::unique_ptr<::compiler> create(
 		    logger& log,
 		    std::u8string_view path,
 		    std::string_view id,
