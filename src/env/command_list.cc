@@ -15,10 +15,9 @@ namespace env {
 		                                std::vector<env::command> const& edge) {
 			command_list::commands result{};
 			result.reserve(edge.size());
-			std::transform(edge.begin(), edge.end(), std::back_inserter(result),
-			               [&](auto const& cmd) {
-				               return simplify(paths, cmd.command_line_split());
-			               });
+			std::transform(
+			    edge.begin(), edge.end(), std::back_inserter(result),
+			    [&](auto const& cmd) { return simplify(paths, cmd); });
 			return result;
 		}
 	}  // namespace

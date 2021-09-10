@@ -1,0 +1,48 @@
+<!DOCTYPE compiler [
+<!ENTITY module-config "-fbuiltin-module-map -fprebuilt-implicit-modules -fprebuilt-module-path=bmi">
+<!ENTITY emit-module "-Xclang -emit-module-interface">
+<!ENTITY idcfcxxfo "<var name='INPUT'/> <var name='DEFINES'/> <var name='CFLAGS'/> <var name='CXXFLAGS'/> -o <var name='OUTPUT'/>">
+]>
+
+<compiler>
+    <ident
+        compat="gcc"
+        exe="clang++"
+        name="Clang"
+        guard="defined(__clang__)"
+        version="__clang_major__ __clang_minor__ __clang_patchlevel__"
+        find-triple="false"
+        />
+
+    <bmi-cache dirname="bmi" ext = "pcm" type="direct" partitions="false"/>
+
+    <include-dirs
+        output="stderr"
+        start="#include &lt;...&gt; search starts here:"
+        stop="End of search list."
+        >
+        <cxx/> -x c++ -E -v -o- -
+    </include-dirs>
+
+    <rules>
+        <rule id="MKDIR"/>
+
+        <rule id="EMIT_INCLUDE"><command><cxx/> -x c++-header &idcfcxxfo; &module-config; &emit-module;</command></rule>
+        <rule id="EMIT_BMI"><command><cxx/> &idcfcxxfo; &module-config; &emit-module;</command></rule>
+        <rule id="COMPILE"><command><cxx/> &idcfcxxfo; &module-config; -c</command></rule>
+
+        <rule id="LINK_EXECUTABLE">
+            <command><cxx/> <var name="LINK_FLAGS"/> <var name="INPUT"/> -o <var name="OUTPUT"/></command>
+        </rule>
+
+        <rule id="LINK_STATIC">
+            <command><tool which="rm"/> -rf <var name="OUTPUT"/></command>
+            <command><tool which="ar"/> qc <var name="OUTPUT"/> <var name="LINK_FLAGS"/> <var name="INPUT"/></command>
+            <command><tool which="ranlib"/> <var name="OUTPUT"/></command>
+        </rule>
+
+        <!-- dont know how to do them... -->
+        <rule id="LINK_SO"/>
+        <rule id="LINK_MOD"/>
+    </rules>
+</compiler>

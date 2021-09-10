@@ -113,11 +113,13 @@ add_executable(c++modules
     src/scanner.hh
     src/types.cc
     src/types.hh
-    src/xml/compiler.cc
-    src/xml/compiler.hh
+    src/xml.hh
+    src/xml/xml.cc
     src/xml/parser.cc
     src/xml/parser.hh
     src/xml/expat.hh
+    src/xml/factory.cc
+    src/xml/factory.hh
     src/xml/handlers-internal.hh
     src/xml/handlers.cc
     src/xml/handlers.hh

@@ -6,7 +6,7 @@
 #include "scanner.hh"
 #include "types.hh"
 #include "utils.hh"
-#include "xml/compiler.hh"
+#include "xml.hh"
 
 using namespace std::literals;
 

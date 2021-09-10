@@ -2,12 +2,14 @@
 #include <iostream>
 #include <map>
 #include "dirs.hh"
+#include "xml/factory.hh"
 #include "xml/parser.hh"
 
 namespace {
 	void register_xml_compiler(std::filesystem::path&& filename,
 	                           xml::compiler_factory_config&& cfg) {
-		// TODO
+		compiler_info::register_impl(std::make_unique<xml::factory>(
+		    std::move(filename), std::move(cfg)));
 	}
 
 	struct xml_compiler_info {

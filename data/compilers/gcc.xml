@@ -1,0 +1,49 @@
+<compiler>
+    <ident
+        compat="gcc"
+        exe="g++"
+        name="GCC"
+        guard="defined(__GNUC__)"
+        version="__GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__"
+        find-triple="true"
+        />
+
+    <bmi-cache dirname="gcm.cache" ext = "gcm" type="side-effect"/>
+
+    <include-dirs
+        output="stderr"
+        start="#include &lt;...&gt; search starts here:"
+        stop="End of search list."
+        >
+        <cxx/> -x c++ -E -v -o- -
+    </include-dirs>
+
+    <rules>
+        <rule id="MKDIR"/>
+        <rule id="EMIT_BMI"/>
+
+        <rule id="EMIT_INCLUDE">
+            <command><cxx/> <var name="DEFINES"/> <var name="CFLAGS"/> <var name="CXXFLAGS"/>
+                -x c++-header -fmodules-ts -fmodule-header <var name="INPUT"/></command>
+        </rule>
+
+        <rule id="COMPILE">
+            <command><cxx/> <var name="DEFINES"/> <var name="CFLAGS"/> <var name="CXXFLAGS"/>
+                -fmodules-ts -c <var name="INPUT"/> -o <var name="OUTPUT"/></command>
+        </rule>
+
+        <rule id="LINK_EXECUTABLE">
+            <command><cxx/> <var name="LINK_FLAGS"/> <var name="INPUT"/> -o <var name="OUTPUT"/></command>
+        </rule>
+
+        <rule id="LINK_STATIC">
+            <command><tool which="rm"/> -rf <var name="OUTPUT"/></command>
+            <command><tool which="ar"/> qc <var name="OUTPUT"/> <var name="LINK_FLAGS"/> <var name="INPUT"/></command>
+            <command><tool which="ranlib"/> <var name="OUTPUT"/></command>
+        </rule>
+
+        <!-- dont know how to do them... -->
+        <rule id="LINK_SO"/>
+        <rule id="LINK_MOD"/>
+    </rules>
+</compiler>
