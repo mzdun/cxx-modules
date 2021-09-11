@@ -220,7 +220,7 @@ build_info build_info::analyze(
 	return build;
 }
 
-fs::path build_info::source_from_build() const {
+fs::path build_info::source_from_binary() const {
 	std::error_code ec;
 	auto sourcedir = fs::relative(source_dir, binary_dir, ec);
 	if (ec) sourcedir = source_dir;

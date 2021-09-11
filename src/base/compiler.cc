@@ -67,12 +67,6 @@ namespace {
 		return text;
 	}
 
-	void write(TinyProcessLib::Process& proc, std::string_view view) {
-		proc.write(view.data(), view.size());
-	}
-
-	void write(TinyProcessLib::Process& proc, char sep) { proc.write(&sep, 1); }
-
 	static constexpr auto cxx_modules = u8"c++modules"sv;
 	static constexpr auto ident_file = u8"ident.cpp"sv;
 
