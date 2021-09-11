@@ -1,11 +1,11 @@
 #include <base/compiler.hh>
+#include <base/logger.hh>
+#include <base/types.hh>
 #include <base/utils.hh>
 #include <base/xml.hh>
 #include <generators/dot.hh>
 #include <generators/ninja.hh>
 #include <iostream>
-#include "logger.hh"
-#include "types.hh"
 
 #ifdef __has_include
 #if __has_include(<generators/vs.hh>)

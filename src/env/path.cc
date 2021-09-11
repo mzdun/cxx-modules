@@ -172,6 +172,11 @@ namespace env {
 		return fullpath(tool.name).generic_u8string();
 	}
 
+#ifdef _MSC_VER
+#pragma warning(push)
+	// declaration of 'is_gcc'/'root'/... hides class member
+#pragma warning(disable : 4458)
+#endif
 	paths paths::parser::find() && {
 		auto const is_gcc = tool == u8"g++"sv;
 		paths result{};
@@ -238,6 +243,9 @@ namespace env {
 
 		return {false, {}, {}, {}};
 	}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 	fs::path which(fs::path const& tool) { return fullpath(tool); }
 }  // namespace env

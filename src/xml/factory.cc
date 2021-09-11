@@ -2,7 +2,7 @@
 #include <charconv>
 #include <env/path.hh>
 #include <xml/compiler.hh>
-#include "logger.hh"
+#include <base/logger.hh>
 
 namespace xml {
 	namespace {

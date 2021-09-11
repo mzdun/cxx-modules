@@ -86,11 +86,15 @@ add_subdirectory(extras)
 
 configure_file(src/dirs.in.hh src/dirs.hh @ONLY)
 
-add_executable(c++modules
+set(SRCS
     src/base/compiler.cc
     src/base/compiler.hh
     src/base/generator.cc
     src/base/generator.hh
+    src/base/logger.cc
+    src/base/logger.hh
+    src/base/types.cc
+    src/base/types.hh
     src/base/utils.hh
     src/base/xml.hh
     src/compilers/cl.cc
@@ -109,11 +113,7 @@ add_executable(c++modules
     src/generators/dot.hh
     src/generators/ninja.cc
     src/generators/ninja.hh
-    src/logger.cc
-    src/logger.hh
     src/main.cc
-    src/types.cc
-    src/types.hh
     src/xml/compiler.cc
     src/xml/compiler.hh
     src/xml/expat.hh
@@ -127,6 +127,18 @@ add_executable(c++modules
     src/xml/types.hh
     src/xml/xml.cc
 )
+
+if (MSVC)
+    list(APPEND SRCS
+        src/win32/vssetup.cc
+        src/win32/vssetup.hh
+        src/win32/Setup.Configuration.h
+    )
+endif()
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
+
+add_executable(c++modules ${SRCS})
 target_compile_options(c++modules PRIVATE ${ADDITIONAL_WALL_FLAGS})
 target_link_libraries(c++modules PUBLIC cell hilite hilite-cxx fs json tiny-process-library expat mbits::args)
 target_include_directories(c++modules PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/src)

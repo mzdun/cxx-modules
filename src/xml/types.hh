@@ -2,7 +2,8 @@
 
 #include <base/generator.hh>
 #include <base/utils.hh>
-#include "env/path.hh"
+#include <env/path.hh>
+#include <map>
 
 namespace xml {
 	struct ident {
