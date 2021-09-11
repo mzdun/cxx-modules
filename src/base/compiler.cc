@@ -7,6 +7,9 @@
 #include <iterator>
 #include <process.hpp>
 #include "types.hh"
+#ifdef _WIN32
+#include "win32/vssetup.hh"
+#endif
 
 namespace {
 	using namespace std::literals;
@@ -270,8 +273,13 @@ size_t compiler_info::register_impl(std::unique_ptr<compiler_factory>&& impl) {
 }
 
 compiler_info compiler_info::from_environment(fs::path const& build_dir) {
+#ifdef _WIN32
+	auto const var = vssetup::find_compiler();
+	compiler_info result{var, "cl"s, {}};
+#else
 	auto const var = compiler_executable();
 	compiler_info result{env::which(var), var.string(), {}};
+#endif
 	result.cat = get_compiler_category_by_name(result.exec);
 	result.id = compiler_type(build_dir, result.exec, result.cat);
 	for (auto const& impl : factories()) {
