@@ -76,8 +76,8 @@ namespace {
 	static constexpr auto cxx_modules = u8"c++modules"sv;
 	static constexpr auto ident_file = u8"ident.cpp"sv;
 
-	bool write_ident_cpp(fs::path const& build_dir) {
-		auto const dir = build_dir / cxx_modules;
+	bool write_ident_cpp(fs::path const& binary_dir) {
+		auto const dir = binary_dir / cxx_modules;
 		std::error_code ec{};
 		fs::create_directories(dir, ec);
 		if (ec) {
@@ -130,13 +130,13 @@ namespace {
 	}
 
 	std::pair<std::string, std::string> compiler_type(
-	    fs::path const& build_dir,
+	    fs::path const& binary_dir,
 	    fs::path const& cxx,
 	    compiler_info::category cat) {
-		if (!write_ident_cpp(build_dir)) return {};
+		if (!write_ident_cpp(binary_dir)) return {};
 
 		auto text = cleanup(
-		    preproc_file(cxx, build_dir / cxx_modules / ident_file, cat));
+		    preproc_file(cxx, binary_dir / cxx_modules / ident_file, cat));
 
 		auto new_stop = text.size();
 		decltype(new_stop) new_start = 0;
@@ -272,7 +272,7 @@ size_t compiler_info::register_impl(std::unique_ptr<compiler_factory>&& impl) {
 	return factories().size();
 }
 
-compiler_info compiler_info::from_environment(fs::path const& build_dir) {
+compiler_info compiler_info::from_environment(fs::path const& binary_dir) {
 #ifdef _WIN32
 	auto const var = vssetup::find_compiler();
 	compiler_info result{var, "cl"s, {}};
@@ -281,7 +281,7 @@ compiler_info compiler_info::from_environment(fs::path const& build_dir) {
 	compiler_info result{env::which(var), var.string(), {}};
 #endif
 	result.cat = get_compiler_category_by_name(result.exec);
-	result.id = compiler_type(build_dir, result.exec, result.cat);
+	result.id = compiler_type(binary_dir, result.exec, result.cat);
 	for (auto const& impl : factories()) {
 		if (impl->get_compiler_id().id != result.id.first) continue;
 		result.factory = impl.get();

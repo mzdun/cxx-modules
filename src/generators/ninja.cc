@@ -89,8 +89,8 @@ namespace {
 }  // namespace
 
 void ninja::generate(std::filesystem::path const& back_to_sources,
-                     std::filesystem::path const& builddir) {
-	std::ofstream build_ninja{builddir / u8"build.ninja"sv};
+                     std::filesystem::path const& binary_dir) {
+	std::ofstream build_ninja{binary_dir / u8"build.ninja"sv};
 
 	auto visitor = [&](auto const& arg) {
 		if constexpr (std::is_same_v<decltype(arg), std::string const&>) {

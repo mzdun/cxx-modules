@@ -29,19 +29,20 @@ int main(int argc, char** argv) {
 	load_xml_compilers();
 
 	auto source_dir = fs::current_path();
-	auto build_dir = source_dir / u8"build"sv;
+	auto binary_dir = source_dir / u8"build"sv;
 
 	std::error_code ec{};
-	fs::create_directories(build_dir, ec);
+	fs::create_directories(binary_dir, ec);
 	if (ec) {
-		std::cerr << "c++modules: cannot create " << as_sv(build_dir.generic_u8string())
-		          << ": " << ec.message() << '\n';
+		std::cerr << "c++modules: cannot create "
+		          << as_sv(binary_dir.generic_u8string()) << ": "
+		          << ec.message() << '\n';
 		return 1;
 	}
 
-	auto const comp = compiler_info::from_environment(build_dir);
+	auto const comp = compiler_info::from_environment(binary_dir);
 	auto const build = build_info::analyze(project::load(source_dir), comp,
-	                                       source_dir, build_dir);
+	                                       source_dir, binary_dir);
 
 	logger log{build, comp};
 	log.print();
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
 	PlatformGenerator gen{};
 	if (auto cxx = comp.create(log); cxx) cxx->mapout(build, gen);
 
-	auto back_to_sources = build.source_from_build();
-	gen.generate(back_to_sources, build.build_dir);
-	std::move(gen).to<dot>().generate(back_to_sources, build.build_dir);
+	auto back_to_sources = build.source_from_binary();
+	gen.generate(back_to_sources, build.binary_dir);
+	std::move(gen).to<dot>().generate(back_to_sources, build.binary_dir);
 }

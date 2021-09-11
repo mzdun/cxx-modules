@@ -75,8 +75,8 @@ namespace {
 }  // namespace
 
 void dot::generate(std::filesystem::path const&,
-                   std::filesystem::path const& builddir) {
-	std::ofstream dotfile{builddir / u8"dependencies.dot"sv};
+                   std::filesystem::path const& binary_dir) {
+	std::ofstream dotfile{binary_dir / u8"dependencies.dot"sv};
 
 	dotfile << "digraph {\n"
 	           "    node [fontname=\"Atkinson Hyperlegible\"]\n"
@@ -204,43 +204,6 @@ void dot::generate(std::filesystem::path const&,
 			dotfile << " } [style=dashed]\n";
 		}
 	}
-	/*for (auto const& target : targets_) {
-	    if (ignorable(target.rule)) continue;
-
-	    dotfile << "build " << as_sv(target.main_output);
-	    for (auto const& in : target.outputs.expl)
-	        dotfile << ' ' << as_sv(in);
-	    if (!target.outputs.impl.empty() || !target.outputs.order.empty())
-	        dotfile << " |";
-	    for (auto const& in : target.outputs.impl)
-	        dotfile << ' ' << as_sv(in);
-	    for (auto const& in : target.outputs.order)
-	        dotfile << ' ' << as_sv(in);
-
-	    for (auto const& in : target.inputs.expl) {
-	        if (ignored.count(in) != 0) continue;
-	        dotfile << ' ' << as_sv(in);
-	    }
-	    bool first = true;
-	    for (auto const& in : target.inputs.impl) {
-	        if (ignored.count(in) != 0) continue;
-	        if (first) {
-	            first = false;
-	            dotfile << " |";
-	        }
-	        dotfile << ' ' << as_sv(in);
-	    }
-	    first = true;
-	    for (auto const& in : target.inputs.order) {
-	        if (ignored.count(in) != 0) continue;
-	        if (first) {
-	            first = false;
-	            dotfile << " ||";
-	        }
-	        dotfile << ' ' << as_sv(in);
-	    }
-	    dotfile << '\n';
-	}*/
 
 	dotfile << "}\n";
 }

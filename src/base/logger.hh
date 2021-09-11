@@ -7,7 +7,7 @@
 struct logger {
 	build_info const& build;
 	compiler_info const& cxx;
-	fs::path logname{fs::path{build.build_dir} / "c++modules.txt"};
+	fs::path logname{fs::path{build.binary_dir} / "c++modules.txt"};
 	std::ofstream output{logname};
 
 	void print();

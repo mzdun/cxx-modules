@@ -35,7 +35,7 @@ void logger::config() {
 	output << "source dir: " << as_sv(build.source_dir)
 	       << "\n"
 	          "binary dir: "
-	       << as_sv(build.build_dir) << '\n';
+	       << as_sv(build.binary_dir) << '\n';
 	if (!build.imports.empty()) output << "requires\n";
 	for (auto const& [key, imports] : build.imports) {
 		output << "    " << as_sv(key) << '\n';

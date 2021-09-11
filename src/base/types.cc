@@ -116,7 +116,7 @@ std::u8string mod_name::toBMI() const {
 }
 
 static build_info normalized_paths(std::filesystem::path const& source_dir,
-                                   std::filesystem::path const& build_dir) {
+                                   std::filesystem::path const& binary_dir) {
 	auto normalized = [](fs::path const& path) -> fs::path {
 		std::error_code ec;
 		auto abs = fs::absolute(path, ec);
@@ -127,15 +127,15 @@ static build_info normalized_paths(std::filesystem::path const& source_dir,
 	};
 
 	return {normalized(source_dir).generic_u8string(),
-	        normalized(build_dir).generic_u8string()};
+	        normalized(binary_dir).generic_u8string()};
 }
 
 build_info build_info::analyze(
     std::map<project, project::setup> const& projects,
     compiler_info const& cxx,
     std::filesystem::path const& source_dir,
-    std::filesystem::path const& build_dir) {
-	auto build = normalized_paths(source_dir, build_dir);
+    std::filesystem::path const& binary_dir) {
+	auto build = normalized_paths(source_dir, binary_dir);
 
 	for (auto const& [project, setup] : projects) {
 		auto& dependency = build.projects[project];
@@ -222,7 +222,7 @@ build_info build_info::analyze(
 
 fs::path build_info::source_from_build() const {
 	std::error_code ec;
-	auto sourcedir = fs::relative(source_dir, build_dir, ec);
+	auto sourcedir = fs::relative(source_dir, binary_dir, ec);
 	if (ec) sourcedir = source_dir;
 	return sourcedir.lexically_normal();
 }

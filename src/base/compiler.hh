@@ -70,7 +70,7 @@ struct compiler_info {
 	compiler_factory const* factory{};
 	category cat{gcc_like};
 	static size_t register_impl(std::unique_ptr<compiler_factory>&&);
-	static compiler_info from_environment(fs::path const& build_dir);
+	static compiler_info from_environment(fs::path const& binary_dir);
 	std::optional<std::string> preproc(fs::path const&) const;
 	std::unique_ptr<compiler> create(struct logger& log) const {
 		if (!factory) return {};

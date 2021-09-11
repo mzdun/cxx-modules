@@ -75,7 +75,7 @@ struct project_info {
 
 struct build_info {
 	std::u8string source_dir{};
-	std::u8string build_dir{};
+	std::u8string binary_dir{};
 	std::map<mod_name, module_info> modules{};
 	std::map<project, project_info> projects{};
 	std::map<std::u8string, std::vector<mod_name>> imports{};
@@ -86,5 +86,5 @@ struct build_info {
 	                          std::filesystem::path const&,
 	                          std::filesystem::path const&);
 
-	std::filesystem::path source_from_build() const;
+	std::filesystem::path source_from_binary() const;
 };
