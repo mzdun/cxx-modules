@@ -13,7 +13,7 @@ conan_basic_setup()
 
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
-find_package(expat REQUIRED)
+find_package(expat REQUIRED HINTS ${CMAKE_BINARY_DIR})
 find_package(fmt REQUIRED)
 find_package(args REQUIRED)
 
@@ -46,6 +46,7 @@ if (MSVC)
         /w14906
         /w14928
         /w14946
+        /D_CRT_SECURE_NO_WARNINGS
     )
 else()
     set(ADDITIONAL_WALL_FLAGS
@@ -140,7 +141,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_executable(c++modules ${SRCS})
 target_compile_options(c++modules PRIVATE ${ADDITIONAL_WALL_FLAGS})
-target_link_libraries(c++modules PUBLIC cell hilite hilite-cxx fs json tiny-process-library expat mbits::args)
+target_link_libraries(c++modules PUBLIC hilite-cxx fs json tiny-process-library expat::expat mbits::args)
 target_include_directories(c++modules PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 add_custom_target(copy-data ALL

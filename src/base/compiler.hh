@@ -62,12 +62,15 @@ private:
 };
 
 struct compiler_info {
+	enum category { gcc_like, vc };
+
 	fs::path exec;
 	std::string name;
 	std::pair<std::string, std::string> id;
 	compiler_factory const* factory{};
+	category cat{gcc_like};
 	static size_t register_impl(std::unique_ptr<compiler_factory>&&);
-	static compiler_info from_environment();
+	static compiler_info from_environment(fs::path const& build_dir);
 	std::optional<std::string> preproc(fs::path const&) const;
 	std::unique_ptr<compiler> create(struct logger& log) const {
 		if (!factory) return {};

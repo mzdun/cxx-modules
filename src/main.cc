@@ -31,17 +31,17 @@ int main(int argc, char** argv) {
 	auto source_dir = fs::current_path();
 	auto build_dir = source_dir / u8"build"sv;
 
-	auto const comp = compiler_info::from_environment();
-	auto const build = build_info::analyze(project::load(source_dir), comp,
-	                                       source_dir, build_dir);
-
 	std::error_code ec{};
-	fs::create_directories(build.build_dir, ec);
+	fs::create_directories(build_dir, ec);
 	if (ec) {
-		std::cerr << "c++modules: cannot create " << as_sv(build.build_dir)
+		std::cerr << "c++modules: cannot create " << as_sv(build_dir.generic_u8string())
 		          << ": " << ec.message() << '\n';
 		return 1;
 	}
+
+	auto const comp = compiler_info::from_environment(build_dir);
+	auto const build = build_info::analyze(project::load(source_dir), comp,
+	                                       source_dir, build_dir);
 
 	logger log{build, comp};
 	log.print();
