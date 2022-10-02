@@ -6,6 +6,7 @@
 #include <fs/file.hh>
 #include <iostream>
 #include <json/json.hpp>
+#include <algorithm>
 
 namespace {
 	void load_directory(std::map<project, project::setup>& result,

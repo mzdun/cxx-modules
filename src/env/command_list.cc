@@ -1,5 +1,6 @@
 #include "env/command_list.hh"
 #include <base/utils.hh>
+#include <algorithm>
 
 namespace env {
 	namespace {

@@ -1,6 +1,7 @@
 #include "cxx/scanner.hh"
 #include <base/utils.hh>
 #include <hilite/cxx.hh>
+#include <algorithm>
 
 using namespace std::literals;
 

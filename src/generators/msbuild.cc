@@ -21,46 +21,6 @@
 using namespace std::literals;
 
 namespace {
-	std::string_view varname(var v) {
-		switch (v) {
-			case var::INPUT:
-				return "$in"sv;
-			case var::OUTPUT:
-				return "$out"sv;
-			case var::MAIN_OUTPUT:
-				return "$MAIN_OUTPUT"sv;
-			case var::LINK_FLAGS:
-				return "$LINK_FLAGS"sv;
-			case var::LINK_PATH:
-				return "$LINK_PATH"sv;
-			case var::LINK_LIBRARY:
-				return "$LINK_LIBRARY"sv;
-			case var::DEFINES:
-				return "$DEFINES"sv;
-			case var::CFLAGS:
-				return "$CFLAGS"sv;
-			case var::CXXFLAGS:
-				return "$CXXFLAGS"sv;
-		}
-		return {};
-	}
-
-	std::string_view name2sv(rule_name const& name) {
-		return std::visit(
-		    [](auto const& name) -> std::string_view {
-			    if constexpr (std::is_same_v<decltype(name),
-			                                 std::monostate const&>)
-				    return "[src]"sv;
-			    else if constexpr (std::is_same_v<decltype(name),
-			                                      std::string const&>)
-				    return name;
-			    else {
-				    return {};
-			    }
-		    },
-		    name);
-	}
-
 	std::u8string filename_from(std::filesystem::path const& back_to_sources,
 	                            file_ref const& file,
 	                            std::vector<project_setup> const& setups) {
@@ -85,19 +45,6 @@ namespace {
 		return file.path;
 	}
 
-	void print_artifact(artifact const& name,
-	                    std::filesystem::path const& back_to_sources,
-	                    std::vector<project_setup> const& setups) {
-		std::visit(
-		    [&](auto const& name) {
-			    if constexpr (std::is_same_v<decltype(name), file_ref>) {
-				    std::cout << filename_from(back_to_sources, name, setups);
-			    } else if constexpr (std::is_same_v<decltype(name), mod_ref>) {
-			    }
-		    },
-		    name);
-	}
-
 	std::string_view name_of(project::kind kind) {
 		switch (kind) {
 			case project::executable:
@@ -106,6 +53,8 @@ namespace {
 				return "StaticLibrary"sv;
 			case project::shared_lib:
 				return "DynamicLibrary"sv;
+			default:
+				break;
 		}
 		return "Utility"sv;
 	}

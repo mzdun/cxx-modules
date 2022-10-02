@@ -20,7 +20,7 @@ void generate(compiler_info const& comp, build_info const& build) {
 
 	auto back_to_sources = build.source_from_binary();
 	gen.generate(back_to_sources, build.binary_dir);
-	std::move(gen).to<dot>().generate(back_to_sources, build.binary_dir);
+	std::move(gen).template to<dot>().generate(back_to_sources, build.binary_dir);
 }
 
 int main(int argc, char** argv) {

@@ -2,6 +2,7 @@
 #include <base/utils.hh>
 #include <iostream>
 #include <process.hpp>
+#include <iterator>
 
 namespace env {
 	void include_locator::from_env(char const* name) {
