@@ -1,7 +1,8 @@
-#include <string>
+import <string>;
+import <format>;
 
 import name;
 
 int main() {
-	ns::greet("Y'all [static-lib]");
+	ns::greet(std::format("Y'all [{}]", ns::kind()));
 }

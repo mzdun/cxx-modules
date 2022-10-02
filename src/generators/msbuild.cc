@@ -1,13 +1,21 @@
 #include "generators/msbuild.hh"
-#include <openssl/md5.h>
+#include <fmt/format.h>
 #include <array>
 #include <base/utils.hh>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <set>
 
 #ifdef _WIN32
 #include "win32/vssetup.hh"
+#endif
+
+#include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER >= 0x3000000fL
+#include <openssl/evp.h>
+#else
+#include <openssl/md5.h>
 #endif
 
 using namespace std::literals;
@@ -119,12 +127,30 @@ namespace {
 		std::string uuid3(std::u8string const& payload) {
 			static constexpr auto ns =
 			    "\xee\x30\xc4\xbe\x51\x92\x4f\xb0\xb3\x35\x72\x2a\x2d\xff\xe7\x60"sv;
+#if OPENSSL_VERSION_NUMBER >= 0x3000000fL
+			unsigned len = EVP_MD_size(EVP_md5());
+			std::vector<unsigned char> uuid(len);
+			{
+				std::unique_ptr<EVP_MD_CTX, decltype([](EVP_MD_CTX* ptr) {
+					                EVP_MD_CTX_free(ptr);
+				                })>
+				    mdctx{EVP_MD_CTX_new()};
+				EVP_DigestInit_ex(mdctx.get(), EVP_md5(), nullptr);
+				EVP_DigestUpdate(mdctx.get(), ns.data(), ns.size());
+				EVP_DigestUpdate(mdctx.get(), payload.data(), payload.size());
+
+				EVP_DigestFinal_ex(mdctx.get(), uuid.data(), &len);
+			}
+
+			if (len != 16) return {};
+#else
 			unsigned char uuid[MD5_DIGEST_LENGTH];
 			MD5_CTX ctx{};
 			MD5_Init(&ctx);
 			MD5_Update(&ctx, ns.data(), ns.size());
 			MD5_Update(&ctx, payload.data(), payload.size());
 			MD5_Final(uuid, &ctx);
+#endif
 
 			uuid[6] &= 0xF;
 			uuid[6] |= static_cast<unsigned char>(3u << 4);
@@ -258,26 +284,26 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
 
 			for (auto const& platform : {"x64"sv}) {
 				for (auto const& config : {"Debug"sv, "Release"sv}) {
-					;
-					vcxproj
-					    << R"(    <OutDir Condition="'$(Configuration)|$(Platform)'==')"sv
-					    << config << R"(|)"sv << platform << R"('">)"sv
-					    << as_sv((std::filesystem::path{additional_back} /
-					              platform / config /
-					              std::filesystem::path{prjname}.parent_path())
-					                 .make_preferred()
-					                 .u8string())
-					    <<
-					    R"(\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'==')"sv
-					    << config << R"(|)"sv << platform << R"('">)"sv
-					    << as_sv((std::filesystem::path{prjname + u8".dir"}
-					                  .filename() /
-					              platform / config)
-					                 .make_preferred()
-					                 .u8string())
-					    << R"(\</IntDir>
-)"sv;
+					auto const outdir =
+					    (std::filesystem::path{additional_back} / platform /
+					     config / std::filesystem::path{prjname}.parent_path())
+					        .make_preferred()
+					        .u8string();
+					auto const intdir =
+					    (std::filesystem::path{prjname + u8".dir"}.filename() /
+					     platform / config)
+					        .make_preferred()
+					        .u8string();
+					vcxproj << fmt::format(
+					    R"(    <OutDir
+Condition="'$(Configuration)|$(Platform)'=='{config}|{platform}'">{outdir}\</OutDir>
+	<IntDir
+Condition="'$(Configuration)|$(Platform)'=='{config}|{platform}'">{intdir}\</IntDir>
+)",
+					    fmt::arg("platform", platform),
+					    fmt::arg("config", config),
+					    fmt::arg("outdir", as_sv(outdir)),
+					    fmt::arg("intdir", as_sv(intdir)));
 				}
 			}
 
@@ -287,53 +313,51 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
 
 			for (auto const& platform : {"x64"sv}) {
 				for (auto const& config : {"Debug"sv, "Release"sv}) {
-					vcxproj << R"(    <ProjectConfiguration Include=")"sv
-					        << config << R"(|)"sv << platform <<
-					    R"(">
-      <Configuration>)"sv << config
-					        <<
-					    R"(</Configuration>
-      <Platform>)"sv << platform
-					        <<
-					    R"(</Platform>
+					vcxproj << fmt::format(
+					    R"(    <ProjectConfiguration Include="{config}|{platform}">
+      <Configuration>{config}</Configuration>
+      <Platform>{platform}</Platform>
     </ProjectConfiguration>
-)"sv;
+)",
+					    fmt::arg("platform", platform),
+					    fmt::arg("config", config));
 				}
 			}
-
-			vcxproj << R"(  </ItemGroup>
+			vcxproj << fmt::format(R"(  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{)"sv
-			        << prj.guid << R"(}</ProjectGuid>
-)"sv;
+    <ProjectGuid>{{{}}}</ProjectGuid>
+)",
+			                       prj.guid);
 #ifdef _WIN32
 			auto const win10 = vssetup::win10sdk();
 			if (!win10.empty()) {
-				vcxproj << R"(    <WindowsTargetPlatformVersion>)"sv << win10
-				        << R"(</WindowsTargetPlatformVersion>
-)"sv;
+				vcxproj << fmt::format(
+				    R"(    <WindowsTargetPlatformVersion>{}</WindowsTargetPlatformVersion>
+)",
+				    win10);
 			}
 #endif
-
-			vcxproj << R"(    <Keyword>Win32Proj</Keyword>
+			auto const prj_filename =
+			    std::filesystem::path{filename(back_to_sources, prj.name)}
+			        .filename()
+			        .generic_u8string();
+			auto const prj_kind = name_of(prj.kind);
+			vcxproj << fmt::format(R"(    <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
-    <ProjectName>)"sv
-			        << as_sv(std::filesystem::path{
-			               filename(back_to_sources, prj.name)}
-			                     .filename()
-			                     .generic_u8string())
-			        <<
-			    R"(</ProjectName>
+    <ProjectName>{}</ProjectName>
     <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>)"sv
-			        << name_of(prj.kind) << R"prefix(</ConfigurationType>
+    <ConfigurationType>{}</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+)",
+			                       as_sv(prj_filename), prj_kind);
+
+			vcxproj
+			    << R"prefix(<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -356,6 +380,7 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -370,6 +395,8 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -385,15 +412,15 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
 				auto path = filename_from(back_to_sources, src.file, setups_);
 
 				if (src.exports.empty()) {
-					vcxproj << R"(    <ClCompile Include=")"sv
-					        << additional_back << as_sv(path) << R"(" />
-)"sv;
+					vcxproj << fmt::format(R"(    <ClCompile Include="{}{}" />
+)",
+					                       additional_back, as_sv(path));
 				} else {
-					vcxproj << R"(    <ClCompile Include=")"sv
-					        << additional_back << as_sv(path) << R"(">
-      <CompileAs>CompileAsCppModule</CompileAs>
-    </ClCompile>
-)"sv;
+					vcxproj << fmt::format(R"(    <ClCompile Include="{}{}">
+	  <CompileAs>CompileAsCppModule</CompileAs>
+	</ClCompile>
+)",
+					                       additional_back, as_sv(path));
 				}
 			}
 
@@ -410,11 +437,11 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
 
 				vcxproj << R"(    <ProjectReference Include=")"sv
 				        << as_sv(path.u8string()) << R"(.vcxproj">
-      <Project>{)"sv << ref
+	  <Project>{)"sv << ref
 				        << R"(}</Project>
-      <Name>)"sv << as_sv(filename(back_to_sources, dep.name))
+	  <Name>)"sv << as_sv(filename(back_to_sources, dep.name))
 				        << R"(</Name>
-    </ProjectReference>
+	</ProjectReference>
 )"sv;
 			}
 
@@ -438,15 +465,17 @@ void msbuild::generate(std::filesystem::path const& back_to_sources,
 			    std::filesystem::path{filename(back_to_sources, prj.name)}
 			        .make_preferred()
 			        .u8string();
-			sln << R"(Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = ")"sv
-			    << as_sv(std::filesystem::path{prjname}.filename().u8string())
-			    << R"(", ")"sv << as_sv(prjname) << R"(.vcxproj", "{)"sv
-			    << prj.guid << R"(}"
+			auto const prj_filename =
+			    std::filesystem::path{prjname}.filename().u8string();
+			sln << fmt::format(
+			    R"(Project("{{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}}") = "{}", "{}.vcxproj", "{{{}}}"
 	ProjectSection(ProjectDependencies) = postProject
-)"sv;
+)",
+			    as_sv(prj_filename), as_sv(prjname), prj.guid);
 			for (auto const& guid : prj.ref_guids) {
-				sln << R"(		{)"sv << guid << R"(} = {)"sv << guid << R"(}
-)"sv;
+				sln << fmt::format(R"(		{{{0}}} = {{{0}}}
+)",
+				                   guid);
 			}
 			sln << R"(	EndProjectSection
 EndProject
@@ -463,14 +492,12 @@ EndProject
 		for (auto const& [guid, _] : projects) {
 			for (auto const& platform : {"x64"sv}) {
 				for (auto const& config : {"Debug"sv, "Release"sv}) {
-					sln << R"(		{)"sv << guid << R"(}.)"sv << config
-					    << R"(|)"sv << platform << R"(.ActiveCfg = )"sv
-					    << config << R"(|)"sv << platform << R"(
-		{)"sv << guid << R"(}.)"sv
-					    << config << R"(|)"sv << platform
-					    << R"(.Build.0 = )"sv << config << R"(|)"sv
-					    << platform << R"(
-)"sv;
+					sln << fmt::format(
+					    R"(		{{{guid}}}.{config}|{platform}.ActiveCfg = {config}|{platform}
+		{{{guid}}}.{config}|{platform}.Build.0 = {config}|{platform}
+)",
+					    fmt::arg("guid", guid), fmt::arg("platform", platform),
+					    fmt::arg("config", config));
 				}
 			}
 		}

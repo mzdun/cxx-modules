@@ -1,8 +1,6 @@
-module;
-#include <iostream>
-#include <string>
-
 module name;
+import <iostream>;
+import <string>;
 
 namespace ns {
 	void greet(std::string const& name) {

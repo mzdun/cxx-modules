@@ -2,7 +2,7 @@
 expat/2.4.9
 fmt/9.1.0
 mbits-args/0.12.3
-openssl/3.0.5
+openssl/1.1.1l
 
 [generators]
 cmake
