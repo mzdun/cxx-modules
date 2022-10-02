@@ -4,6 +4,20 @@
 #include <process.hpp>
 
 namespace env {
+	void include_locator::from_env(char const* name) {
+#ifdef _WIN32
+		auto const PATHSEP = ';';
+#else
+		auto const PATHSEP = ':';
+#endif
+		auto const env = std::getenv(name);
+		if (!env) return;
+		auto const dirs = split_s(PATHSEP, env);
+		dirs_.clear();
+		dirs_.reserve(dirs.size());
+		std::copy(dirs.begin(), dirs.end(), std::back_inserter(dirs_));
+	}
+
 	fs::path include_locator::find_include(fs::path const& source_path,
 	                                       std::u8string_view include) {
 		if (include.size() < 3) return {};

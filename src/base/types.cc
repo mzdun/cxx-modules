@@ -2,6 +2,7 @@
 #include <base/compiler.hh>
 #include <base/utils.hh>
 #include <cxx/scanner.hh>
+#include <env/defaults.hh>
 #include <fs/file.hh>
 #include <iostream>
 #include <json/json.hpp>
@@ -81,6 +82,15 @@ namespace {
 		}
 	}
 }  // namespace
+
+std::u8string project::filename() const {
+	auto& mods = env::path_mods();
+	auto& mod = type == project::executable   ? mods.executable
+	            : type == project::static_lib ? mods.static_library
+	                                          : mods.shared_library;
+
+	return mod.modify(name).generic_u8string();
+}
 
 std::map<project, project::setup> project::load(fs::path const& source_dir) {
 	std::map<project, setup> result{};

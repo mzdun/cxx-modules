@@ -12,26 +12,13 @@ struct project {
 	enum kind { executable, static_lib, shared_lib, module_lib };
 	static constexpr std::u8string_view kind2str[] = {u8"EXE"sv, u8"LIB"sv,
 	                                                  u8"SO"sv, u8"MOD"sv};
-	static constexpr std::u8string_view prefix[] = {u8""sv, u8"lib"sv,
-	                                                u8"lib"sv, u8"lib"sv};
-	static constexpr std::u8string_view suffix[] = {u8""sv, u8".a"sv, u8".so"sv,
-	                                                u8".mod"sv};
 
 	std::u8string name;
 	kind type{static_lib};
 
 	auto operator<=>(project const&) const = default;
 
-	std::u8string filename() const {
-		std::u8string result{};
-		auto pre = prefix[type];
-		auto ext = suffix[type];
-		result.reserve(name.size() + pre.size() + ext.size());
-		result.append(pre);
-		result.append(name);
-		result.append(ext);
-		return result;
-	}
+	std::u8string filename() const;
 
 	struct setup {
 		std::filesystem::path subdir;

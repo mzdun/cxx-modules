@@ -8,7 +8,7 @@
         find-triple="true"
         />
 
-    <bmi-cache dirname="gcm.cache" ext = "gcm" type="side-effect"/>
+    <bmi-cache dirname="gcm.cache" ext="gcm" type="side-effect"/>
 
     <include-dirs
         output="stderr"

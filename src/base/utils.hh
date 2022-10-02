@@ -41,6 +41,24 @@ inline std::vector<std::string> split_s(char sep, std::string_view data) {
 	return result;
 }
 
+inline std::vector<std::string> split_s(std::string_view sep, std::string_view data) {
+	std::vector<std::string> result{};
+
+	auto pos = data.find(sep);
+	decltype(pos) prev = 0;
+
+	while (pos != std::string_view::npos) {
+		auto const view = data.substr(prev, pos - prev);
+		prev = pos + sep.length();
+		pos = data.find(sep, prev);
+		result.push_back(as_str(view));
+	}
+
+	result.push_back(as_str(data.substr(prev)));
+
+	return result;
+}
+
 inline std::string_view lstrip_sv(std::string_view data) {
 	auto new_stop = data.size();
 	decltype(new_stop) new_start = 0;

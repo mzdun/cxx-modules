@@ -2,6 +2,7 @@
 #include <base/generator.hh>
 #include <base/utils.hh>
 #include <env/path.hh>
+#include <env/defaults.hh>
 #include "process.hpp"
 #include "types.hh"
 
@@ -15,6 +16,8 @@ namespace xml {
 	void compiler::mapout(build_info const& build, generator& gen) {
 		std::vector<target> targets;
 
+		auto const& mods = env::path_mods();
+
 		auto ids = register_projects(build, gen);
 
 		auto const standalone_bmi = bin_.standalone_interface();
@@ -26,7 +29,7 @@ namespace xml {
 			for (auto const& filename : info.sources) {
 				auto const srcfile =
 				    (info.subdir / filename).generic_u8string();
-				auto const objfile = filename + u8".o";
+				auto const objfile = mods.object.modify(filename).generic_u8string();
 
 				auto const mods_it = build.imports.find(srcfile);
 				auto const iface_it = build.exports.find(srcfile);

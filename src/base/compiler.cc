@@ -1,6 +1,7 @@
 #include "base/compiler.hh"
 #include <base/utils.hh>
 #include <deque>
+#include <env/defaults.hh>
 #include <env/path.hh>
 #include <fstream>
 #include <iostream>
@@ -40,7 +41,7 @@ namespace {
 		auto const srcfile = source.generic_string();
 		auto const args =
 		    cat == compiler_info::vc
-		        ? std::vector<std::string>{exec, "/E", srcfile}
+		        ? std::vector<std::string>{exec, "/nologo", "/E", srcfile}
 		        : std::vector<std::string>{exec, "-E", "-o-", "-xc++", srcfile};
 
 		std::optional<std::string> text{std::string{}};
@@ -60,7 +61,8 @@ namespace {
 			          << preproc.get_exit_status() << '\n';
 		}
 
-		if (!error_out.empty()) {
+		if (!error_out.empty() && (cat != compiler_info::vc ||
+		                           error_out != source.filename().string() + "\r\n")) {
 			std::cerr << error_out;
 		}
 
@@ -144,6 +146,21 @@ namespace {
 
 		return {std::move(type), std::move(text)};
 	}
+
+	compiler_info from_environment() {
+		auto const var = compiler_executable();
+#ifdef _WIN32
+		if (var == u8"c++"sv) {
+			auto path = vssetup::find_compiler();
+			return {path, "cl"s, {}, nullptr, compiler_info::vc};
+		}
+#endif
+		return {env::which(var),
+		        var.string(),
+		        {},
+		        nullptr,
+		        compiler_info::gcc_like};
+	}
 }  // namespace
 
 compiler::~compiler() = default;
@@ -207,8 +224,10 @@ target compiler::create_project_target(
 			break;
 	}
 
+	auto const& mods = env::path_mods();
+
 	for (auto const& filename : info.sources) {
-		auto const objfile = filename + u8".o";
+		auto const objfile = mods.object.modify(filename).generic_u8string();
 
 		library.inputs.expl.push_back(file_ref{setup_id, objfile});
 	}
@@ -267,13 +286,7 @@ size_t compiler_info::register_impl(std::unique_ptr<compiler_factory>&& impl) {
 }
 
 compiler_info compiler_info::from_environment(fs::path const& binary_dir) {
-#ifdef _WIN32
-	auto const var = vssetup::find_compiler();
-	compiler_info result{var, "cl"s, {}};
-#else
-	auto const var = compiler_executable();
-	compiler_info result{env::which(var), var.string(), {}};
-#endif
+	compiler_info result = ::from_environment();
 	result.cat = get_compiler_category_by_name(result.exec);
 	result.id = compiler_type(binary_dir, result.exec, result.cat);
 	for (auto const& impl : factories()) {

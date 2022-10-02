@@ -14,7 +14,7 @@
         find-triple="false"
         />
 
-    <bmi-cache dirname="bmi" ext = "pcm" type="direct" partitions="false"/>
+    <bmi-cache dirname="bmi" ext="pcm" type="direct" partitions="false"/>
 
     <include-dirs
         output="stderr"

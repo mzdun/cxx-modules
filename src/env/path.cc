@@ -12,15 +12,27 @@ namespace env {
 		constexpr auto PATHSEP = ':';
 #endif
 
-		std::vector<fs::path> getPATH() {
-			auto PATH = std::getenv("PATH");
-			if (!PATH || !*PATH) return {};
+		template <typename StringLike, typename From>
+		StringLike conv_str(From const* ptr, size_t length) {
+			using To = StringLike::value_type;
+			if constexpr (std::is_same_v<StringLike, fs::path>)
+				return conv_str<std::u8string_view>(ptr, length);
+			else if constexpr (std::is_same_v<To, From>)
+				return {ptr, length};
+			else if constexpr (sizeof(From) == sizeof(To))
+				return {reinterpret_cast<To const*>(ptr), length};
+		}
 
-			std::vector<fs::path> result{};
+		template <typename StringLike>
+		std::vector<StringLike> get_var_list(const char* name) {
+			auto VAR = std::getenv(name);
+			if (!VAR || !*VAR) return {};
 
-			std::string_view paths{PATH};
+			std::vector<StringLike> result{};
+
+			std::string_view view{VAR};
 			size_t chunks = 1;
-			for (auto c : paths) {
+			for (auto c : view) {
 				if (c == PATHSEP) ++chunks;
 			}
 			result.reserve(chunks);
@@ -28,15 +40,57 @@ namespace env {
 			size_t prev = 0;
 			size_t current = 0;
 
-			for (auto c : paths) {
+			for (auto c : view) {
 				++current;
 				if (c != PATHSEP) continue;
-				auto curr = paths.substr(prev, current - 1 - prev);
+				auto curr = view.substr(prev, current - 1 - prev);
 				prev = current;
-				if (!curr.empty()) result.emplace_back(curr);
+				if (!curr.empty())
+					result.emplace_back(
+					    conv_str<StringLike>(curr.data(), curr.length()));
 			}
 
 			return result;
+		}
+
+		auto const& getPATH() {
+			static auto PATH = get_var_list<fs::path>("PATH");
+			return PATH;
+		}
+
+		std::vector<std::u8string> getPATHEXT_() {
+			auto result = get_var_list<std::u8string>("PATHEXT");
+			for (auto& ext : result) {
+				for (auto& c : ext) {
+					c = static_cast<char>(
+					    std::tolower(static_cast<unsigned char>(c)));
+				}
+			}
+
+			return result;
+		}
+
+		auto const& getPATHEXT() {
+			static auto PATHEXT = getPATHEXT_();
+			return PATHEXT;
+		}
+
+		bool is_regular(fs::path const& path) {
+			std::error_code ec{};
+			auto status = fs::status(path, ec);
+			return !ec && fs::is_regular_file(status);
+		}
+
+		std::optional<fs::path> callable(fs::path const& tool) {
+			if (is_regular(tool)) return tool;
+
+			auto str = tool.generic_u8string();
+			for (auto const& ext : getPATHEXT()) {
+				auto candidate = fs::path{str + ext};
+				if (is_regular(candidate)) return candidate;
+			}
+
+			return {};
 		}
 
 		fs::path fullpath(fs::path const& prog) {
@@ -45,13 +99,10 @@ namespace env {
 			    prog.native().find('/') != std::string::npos)
 				return prog;
 
-			auto path = getPATH();
-			for (auto const& dir : path) {
-				auto candidate = dir / prog;
-				std::error_code ec{};
-				auto status = fs::status(candidate, ec);
-				if (ec || !fs::is_regular_file(status)) continue;
-				return candidate;
+			auto& dirs = getPATH();
+			for (auto const& dir : dirs) {
+				auto candidate = callable(dir / prog);
+				if (candidate) return *std::move(candidate);
 			}
 
 			return prog;
@@ -128,53 +179,49 @@ namespace env {
 		// 7. where tool
 
 		if (!triple.empty()) {
-			if (is_gcc) {
-				if (!suffix.empty()) {
-					auto const path =
-					    root / u8concat(triple, gcc, dash, tool.name, suffix);
-
-					std::error_code ec{};
-					if (fs::exists(path, ec)) return path.generic_u8string();
-				}
-
-				auto const path = root / u8concat(triple, gcc, dash, tool.name);
-
-				std::error_code ec{};
-				if (fs::exists(path, ec)) return path.generic_u8string();
+			if (is_gcc && !suffix.empty()) {
+				// 1. root / prefix-gcc-tool-suffix
+				auto path = callable(
+				    root / u8concat(triple, gcc, dash, tool.name, suffix));
+				if (path) return path->generic_u8string();
 			}
 
 			if (!suffix.empty()) {
-				auto const path =
-				    root / u8concat(triple, dash, tool.name, suffix);
-
-				std::error_code ec{};
-				if (fs::exists(path, ec)) return path.generic_u8string();
+				// 2. root / prefix-tool-suffix
+				auto path =
+				    callable(root / u8concat(triple, dash, tool.name, suffix));
+				if (path) return path->generic_u8string();
 			}
 
-			auto const path = root / u8concat(triple, dash, tool.name);
+			if (is_gcc) {
+				// 3. root / prefix-gcc-tool
+				auto path =
+				    callable(root / u8concat(triple, gcc, dash, tool.name));
+				if (path) return path->generic_u8string();
+			}
 
-			std::error_code ec{};
-			if (fs::exists(path, ec)) return path.generic_u8string();
+			// 4. root / prefix-tool
+			auto path = callable(root / u8concat(triple, dash, tool.name));
+			if (path) return path->generic_u8string();
 		}
 
 		if (!suffix.empty()) {
-			auto const path = root / u8concat(tool.name, suffix);
-
-			std::error_code ec{};
-			if (fs::exists(path, ec)) return path.generic_u8string();
+			// 5. root / tool-suffix
+			auto path = callable(root / u8concat(tool.name, suffix));
+			if (path) return path->generic_u8string();
 		}
 
-		auto const path = root / tool.name;
+		// 6. root / tool
+		auto path = callable(root / tool.name);
+		if (path) return path->generic_u8string();
 
-		std::error_code ec{};
-		if (exists(path, ec)) return path.generic_u8string();
-
+		// 7. where tool
 		return fullpath(tool.name).generic_u8string();
 	}
 
 #ifdef _MSC_VER
 #pragma warning(push)
-	// declaration of 'is_gcc'/'root'/... hides class member
+// declaration of 'is_gcc'/'root'/... hides class member
 #pragma warning(disable : 4458)
 #endif
 	paths paths::parser::find() && {
@@ -218,7 +265,18 @@ namespace env {
 	paths::parser::break_triple(fs::path const& candidate) {
 		auto const root = candidate.parent_path();
 
-		auto const toolname_s = candidate.filename().generic_u8string();
+		auto filename = candidate.filename();
+		{
+			auto const ext = filename.extension();
+			for (auto const& candidate_ext : getPATHEXT()) {
+				if (ext != candidate_ext) continue;
+
+				filename.replace_extension();
+				break;
+			}
+		}
+
+		auto const toolname_s = filename.generic_u8string();
 		auto const toolname = std::u8string_view{toolname_s};
 
 		if (toolname == tool) return {true, root, {}, {}};

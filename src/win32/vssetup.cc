@@ -16,6 +16,8 @@
 #include <comdef.h>
 #include <comip.h>
 #include <comutil.h>
+#include <fmt/format.h>
+#include <process.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -92,6 +94,7 @@ namespace vssetup {
 		constexpr auto MASK = 0xFFFFull;
 		static constexpr auto tooldirname = R"(VC\Tools\MSVC)"sv;
 		static constexpr auto x64bin = R"(bin\Hostx64\x64)"sv;
+		static constexpr auto vcvars = R"(VC\Auxiliary\Build\vcvars64.bat)"sv;
 
 		struct VSInstance {
 			ULONGLONG vs_version{};
@@ -222,13 +225,56 @@ namespace vssetup {
 			static auto instances = enum_instalations();
 			return instances;
 		}
+
+		std::string which_cmd() {
+			char buffer[8192] = {};
+			if (!SearchPathA(nullptr, "cmd", ".cmd", std::size(buffer), buffer,
+			                 nullptr)) {
+				SearchPathA(nullptr, "cmd", ".exe", std::size(buffer), buffer,
+				            nullptr);
+			}
+			return buffer;
+		}
+
+		void call_vcvars(std::filesystem::path const& bat) {
+			std::string output, error_out,
+			    script = "call \"" + bat.string() +
+			             "\" && echo ====SEPARATOR==== && set";
+			std::vector<std::string> args{which_cmd(), "/c", script};
+			TinyProcessLib::Process call{
+			    args, "",
+			    [&](const char* bytes, size_t n) { output.append(bytes, n); },
+			    [&](const char* bytes, size_t n) {
+				    error_out.append(bytes, n);
+			    }};
+
+			auto const retcode = call.get_exit_status();
+			if (retcode && !error_out.empty()) {
+				fputs(error_out.c_str(), stderr);
+			}
+			if (retcode) return;
+
+			auto const split_for_vars = split_s("====SEPARATOR===="sv, output);
+			if (split_for_vars.size() != 2) return;
+			auto const vars = split_s("\r\n"sv, strip_sv(split_for_vars[1]));
+			for (auto const& var : vars) {
+				auto pos = var.find('=');
+				if (pos == std::string::npos) continue;
+				_putenv(strip_s(var).c_str());
+			}
+		}
 	}  // namespace
 
 	std::filesystem::path find_compiler() {
 		for (auto const& inst : installations()) {
+			call_vcvars(inst.root / vcvars);
 			return inst.root / tooldirname / inst.vc_version / x64bin /
 			       "cl.exe"sv;
 		}
 		return "cl.exe"sv;
+	}
+
+	std::string win10sdk() {
+		return {};
 	}
 }  // namespace vssetup

@@ -4,16 +4,24 @@
 #include <base/utils.hh>
 #include <base/xml.hh>
 #include <generators/dot.hh>
+#include <generators/msbuild.hh>
 #include <generators/ninja.hh>
 #include <iostream>
 
-#ifdef __has_include
-#if __has_include(<generators/vs.hh>)
-#include <generators/vs.hh>
-#endif
-#endif
-
 using namespace std::literals;
+
+template <typename PlatformGenerator>
+void generate(compiler_info const& comp, build_info const& build) {
+	logger log{build, comp};
+	log.print();
+
+	PlatformGenerator gen{};
+	if (auto cxx = comp.create(log); cxx) cxx->mapout(build, gen);
+
+	auto back_to_sources = build.source_from_binary();
+	gen.generate(back_to_sources, build.binary_dir);
+	std::move(gen).to<dot>().generate(back_to_sources, build.binary_dir);
+}
 
 int main(int argc, char** argv) {
 	if (argc > 1) {
@@ -44,15 +52,8 @@ int main(int argc, char** argv) {
 	auto const build = build_info::analyze(project::load(source_dir), comp,
 	                                       source_dir, binary_dir);
 
-	logger log{build, comp};
-	log.print();
-
-	using PlatformGenerator = ninja;  // FUTURE: ninja || vstudio
-
-	PlatformGenerator gen{};
-	if (auto cxx = comp.create(log); cxx) cxx->mapout(build, gen);
-
-	auto back_to_sources = build.source_from_binary();
-	gen.generate(back_to_sources, build.binary_dir);
-	std::move(gen).to<dot>().generate(back_to_sources, build.binary_dir);
+	if (comp.cat == compiler_info::vc)
+		generate<msbuild>(comp, build);
+	else
+		generate<ninja>(comp, build);
 }

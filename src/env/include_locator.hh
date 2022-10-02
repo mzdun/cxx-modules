@@ -15,6 +15,8 @@ namespace env {
 		    , filter_stop_{filter_stop}
 		    , filter_{resolve(paths, filter)} {}
 
+		void from_env(char const* name);
+
 		fs::path find_include(fs::path const& source_path,
 		                      std::u8string_view include);
 

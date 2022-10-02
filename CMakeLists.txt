@@ -16,6 +16,7 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 find_package(expat REQUIRED HINTS ${CMAKE_BINARY_DIR})
 find_package(fmt REQUIRED)
 find_package(args REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${EXTRA_CFLAGS} /MTd")
@@ -106,12 +107,16 @@ set(SRCS
     src/env/binary_interface.hh
     src/env/command_list.cc
     src/env/command_list.hh
+    src/env/defaults.cc
+    src/env/defaults.hh
     src/env/include_locator.cc
     src/env/include_locator.hh
     src/env/path.cc
     src/env/path.hh
     src/generators/dot.cc
     src/generators/dot.hh
+    src/generators/msbuild.cc
+    src/generators/msbuild.hh
     src/generators/ninja.cc
     src/generators/ninja.hh
     src/main.cc
@@ -129,7 +134,7 @@ set(SRCS
     src/xml/xml.cc
 )
 
-if (MSVC)
+if (WIN32)
     list(APPEND SRCS
         src/win32/vssetup.cc
         src/win32/vssetup.hh
@@ -141,7 +146,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_executable(c++modules ${SRCS})
 target_compile_options(c++modules PRIVATE ${ADDITIONAL_WALL_FLAGS})
-target_link_libraries(c++modules PUBLIC hilite-cxx fs json tiny-process-library expat::expat mbits::args)
+target_link_libraries(c++modules PUBLIC hilite-cxx fs json tiny-process-library expat::expat mbits::args fmt::fmt OpenSSL::Crypto)
 target_include_directories(c++modules PRIVATE src ${CMAKE_CURRENT_BINARY_DIR}/src)
 
 add_custom_target(copy-data ALL

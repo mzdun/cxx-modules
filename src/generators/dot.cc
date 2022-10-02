@@ -42,10 +42,14 @@ namespace {
 		return std::visit(
 		    [](auto const& name) -> bool {
 			    if constexpr (std::is_same_v<decltype(name),
+			                                 std::monostate const&>) {
+				    return false;
+			    }
+			    if constexpr (std::is_same_v<decltype(name),
 			                                 rule_type const&>) {
 				    switch (name) {
 					    case rule_type::MKDIR:
-						    return true;
+						    break;
 					    case rule_type::COMPILE:
 					    case rule_type::EMIT_BMI:
 					    case rule_type::EMIT_INCLUDE:
@@ -53,10 +57,10 @@ namespace {
 					    case rule_type::LINK_SO:
 					    case rule_type::LINK_MOD:
 					    case rule_type::LINK_EXECUTABLE:
-						    break;
+						    return false;
 				    }
 			    }
-			    return false;
+			    return true;
 		    },
 		    name);
 	}
