@@ -1,0 +1,10 @@
+{
+    "greeter": {
+        "type": "static",
+        "sources": [
+            "module.cc",
+            "module/_config.cc",
+            "module/impl.cc"
+        ]
+    }
+}
