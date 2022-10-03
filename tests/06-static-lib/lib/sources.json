@@ -3,7 +3,8 @@
         "type": "static",
         "sources": [
             "mod-iface.cc",
-            "mod-impl.cc"
+            "mod-impl.cc",
+            "internal.cc"
         ]
     }
 }
