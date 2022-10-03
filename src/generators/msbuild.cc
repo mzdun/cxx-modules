@@ -366,8 +366,8 @@ Condition="'$(Configuration)|$(Platform)'=='{config}|{platform}'">{intdir}\</Int
 					                       additional_back, as_sv(path));
 				} else {
 					vcxproj << fmt::format(R"(    <ClCompile Include="{}{}">
-	  <CompileAs>CompileAsCppModule</CompileAs>
-	</ClCompile>
+      <CompileAs>CompileAsCppModule</CompileAs>
+    </ClCompile>
 )",
 					                       additional_back, as_sv(path));
 				}
